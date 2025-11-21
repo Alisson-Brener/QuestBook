@@ -1,0 +1,14 @@
+# Ambiente Python
+venv/
+__pycache__/
+*.pyc
+
+# Dados gerados pela IA (MUITO IMPORTANTE)
+db_vetorial/
+
+# Configurações de IDE
+.vscode/
+.idea/
+
+# Arquivos de Sistema
+.DS_Store
