@@ -1,0 +1,48 @@
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Numeric, TIMESTAMP, text
+from sqlalchemy.orm import relationship
+from backend.database import Base
+
+# Tabela de Usuários
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password_hash = Column(String)
+    role = Column(String) # 'aluno' ou 'curador'
+
+# Tabela de Documentos (PDFs)
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    filename = Column(String)
+    uploaded_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+
+    # Relacionamento: Um documento tem vários capítulos
+    chapters = relationship("Chapter", back_populates="document")
+
+# Tabela de Capítulos
+class Chapter(Base):
+    __tablename__ = "chapters"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    title = Column(String)
+    text_content = Column(Text)
+
+    document = relationship("Document", back_populates="chapters")
+    questions = relationship("SuggestedQuestion", back_populates="chapter")
+
+# Tabela de Questões Sugeridas (IA)
+class SuggestedQuestion(Base):
+    __tablename__ = "suggested_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chapter_id = Column(Integer, ForeignKey("chapters.id"))
+    external_question_id = Column(String) # ID lá do banco de questões
+    confidence_score = Column(Numeric(5, 4)) # ex: 0.9850
+    status = Column(String) # 'APROVADO_IA', 'PENDENTE', etc.
+
+    chapter = relationship("Chapter", back_populates="questions")

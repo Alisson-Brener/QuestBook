@@ -9,15 +9,12 @@ import time
 # ==============================================================================
 
 # 1. Conexão com seu Banco de Dados SQL de Questões
-# Substitua pela "connection string" do seu banco (PostgreSQL, MySQL, etc.)
-# Exemplo PostgreSQL: "postgresql://usuario:senha@localhost:5432/meu_banco"
-# Exemplo MySQL: "mysql+mysqlclient://usuario:senha@localhost:3306/meu_banco"
-DB_CONNECTION_STRING = "postgresql://usuario:senha@localhost:5432/banco_de_questoes"
+DB_CONNECTION_STRING = "mysql+pymysql://root:questbook25@localhost:3306/qconcursos"
 
 # 2. Query SQL para buscar as questões
 # Edite para que os nomes da tabela e colunas batam com o seu banco
 # IMPORTANTE: Pegue o ID (único) e o TEXTO da questão.
-SQL_QUERY = "SELECT id, enunciado FROM tabela_de_questoes"
+SQL_QUERY = "SELECT questao_id, enunciado FROM questoes_engenharia_software"
 
 # 3. Configuração do Modelo de IA (PLN)
 # Este modelo é ótimo e suporta português muito bem.
@@ -109,18 +106,24 @@ def main():
         batch_texts = []
         batch_metadatas = []
 
+        seen_ids_in_batch = set() # Para rastrear duplicatas neste lote
+
         for row in batch:
-            # row[0] é o ID, row[1] é o enunciado (conforme SQL_QUERY)
+            # row[0] é o ID, row[1] é o enunciado
             question_id = str(row[0])
             question_text = str(row[1])
 
-            # Ignora questões sem texto
-            if not question_text.strip():
+            # 1. Filtro de Duplicatas: Se já vimos esse ID neste lote, pula!
+            if question_id in seen_ids_in_batch:
+                continue
+            seen_ids_in_batch.add(question_id)
+
+            # 2. Filtro de Texto Vazio
+            if not question_text or not question_text.strip():
                 continue
 
             batch_ids.append(question_id)
             batch_texts.append(question_text)
-            # 'metadatas' é útil para armazenar o texto original ou outras infos
             batch_metadatas.append({"original_text": question_text})
 
         if not batch_texts:
@@ -132,7 +135,7 @@ def main():
 
         # 4. Salvar no Banco Vetorial
         # Adiciona os dados ao ChromaDB
-        vector_collection.add(
+        vector_collection.upsert(
             ids=batch_ids,
             embeddings=embeddings,
             metadatas=batch_metadatas,

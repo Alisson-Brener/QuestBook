@@ -12,3 +12,6 @@ db_vetorial/
 
 # Arquivos de Sistema
 .DS_Store
+
+# Segredos e Chaves
+.env
