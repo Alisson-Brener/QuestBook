@@ -4,6 +4,7 @@ from pypdf import PdfReader
 from io import BytesIO
 from backend.llm_agent import IntentParser
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # Importar módulos internos do projeto
 from backend.database import engine, SessionLocal, Base, get_db
@@ -16,6 +17,14 @@ from backend.ai_search import QuestSearchEngine
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="QuestBook API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 2. Variável global da IA
 ai_engine: QuestSearchEngine = None

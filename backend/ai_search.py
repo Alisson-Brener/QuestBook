@@ -1,5 +1,6 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
+import math
 import os
 
 class QuestSearchEngine:
@@ -30,6 +31,57 @@ class QuestSearchEngine:
 
     def search_relevant_questions(self, text: str, limit: int = 10):
         """
+        Versão com FILTRO DE QUALIDADE para a Demo.
+        Ignora questões com enunciados muito curtos ou quebrados.
+        """
+        # 1. Gerar vetor
+        query_embedding = self.model.encode([text])
+
+        # 2. Buscar o DOBRO de candidatos (para ter margem de descarte)
+        # Se o usuário pediu 5, buscamos 10. Se pediu 10, buscamos 20.
+        candidates_limit = limit * 3 
+        
+        results = self.collection.query(
+            query_embeddings=query_embedding,
+            n_results=candidates_limit,
+            include=["documents", "metadatas", "distances"] 
+        )
+
+        formatted_results = []
+        
+        ids = results['ids'][0]
+        distances = results['distances'][0]
+        documents = results['documents'][0]
+        metadatas = results['metadatas'][0]
+        
+        import math # Certifique-se de que importou math lá em cima
+
+        for i in range(len(ids)):
+            # Se já preenchemos o limite desejado, para.
+            if len(formatted_results) >= limit:
+                break
+
+            enunciado_texto = documents[i]
+
+            # --- O FILTRO MÁGICO ---
+            # Se o texto for menor que 60 caracteres, provavelmente é lixo ou só cabeçalho.
+            # Ignora e vai para o próximo.
+            if len(enunciado_texto) < 60:
+                continue 
+            # -----------------------
+
+            dist = distances[i]
+            score = math.exp(-dist / 30) # Sua fórmula de confiança ajustada
+            
+            formatted_results.append({
+                "external_id": ids[i],
+                "confidence": round(score, 4),
+                "enunciado": enunciado_texto, 
+                "metadata": metadatas[i]
+            })
+            
+        return formatted_results
+        """
         Recebe um texto (capítulo) e retorna a lista de questões mais próximas
         COM o texto do enunciado.
         """
@@ -54,14 +106,12 @@ class QuestSearchEngine:
         
         for i in range(len(ids)):
             dist = distances[i]
-            score = 1 / (1 + dist)
+            score = math.exp(-dist / 30)
             
             formatted_results.append({
                 "external_id": ids[i],
-                "confidence": round(score, 4),
-                # Adicionamos o enunciado no retorno
+                "confidence": round(score, 4), # Vai dar algo como 0.85
                 "enunciado": documents[i], 
-                # Se tiver metadados (como 'original_text'), mandamos também
                 "metadata": metadatas[i]
             })
             

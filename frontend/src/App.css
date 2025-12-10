@@ -1,0 +1,73 @@
+/* src/App.css */
+body {
+  background-color: #f0f2f5;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+h1 { color: #2c3e50; }
+.tag { background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; vertical-align: middle; }
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+button {
+  cursor: pointer;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+button:disabled { background: #ccc; cursor: not-allowed; }
+
+.btn-primary { background-color: #3498db; color: white; width: 100%; margin-top: 10px; }
+.btn-primary:hover { background-color: #2980b9; }
+
+.upload-box { display: flex; gap: 10px; align-items: center; }
+.chat-box textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
+
+.ai-debug { background: #eee; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-bottom: 20px; }
+
+.question-card {
+  background: #fff;
+  border-left: 5px solid #27ae60;
+  padding: 20px; /* Mais espaço interno */
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+.q-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8em; color: #666; }
+.q-body {
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap; 
+  word-wrap: break-word;
+}
+
+.q-body img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px 0;
+}
+.badge-score { color: #27ae60; font-weight: bold; }

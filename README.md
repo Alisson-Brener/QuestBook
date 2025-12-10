@@ -8,10 +8,11 @@ Sistema inteligente de apoio ao estudo para concursos, utilizando Processamento 
 
 Antes de começar, você precisa ter instalado na sua máquina:
 
-1.  **Python 3.10** (⚠️ Importante: Não use o 3.11 ou 3.12, pois algumas bibliotecas de IA ainda não são compatíveis).
-2.  **MySQL Server** (Para o banco de questões legado).
-3.  **PostgreSQL** (Para o banco de dados da aplicação).
-4.  **Git**.
+1.  **Python 3.10** (⚠️ Importante: Use a versão 3.10 para compatibilidade com as libs de IA).
+2.  **Node.js** (Versão 18 ou superior - Para rodar o Frontend).
+3.  **MySQL Server** (Banco de questões legado).
+4.  **PostgreSQL** (Banco de dados da aplicação).
+5.  **Git**.
 
 ---
 
@@ -39,6 +40,10 @@ py -3.10 -m venv venv
 ```bash
 # Com o (venv) ativo no terminal
 pip install -r requirements.txt
+
+#Abra um terminal entre na pasta do frontend e instale as dependências:
+cd frontend
+npm install
 ```
 
 ### 4. Configurar Variáveis de Ambiente (.env)
@@ -85,33 +90,43 @@ Isso vai baixar o modelo de IA e processar as questões. Pode levar de 5 a 10 mi
 
 ---
 
-## ▶️ Rodando o Backend
+## ▶️ Como Rodar a Aplicação
 
+Para o sistema funcionar, você precisa de dois terminais abertos simultaneamente.
+
+
+Terminal 1: Backend (API)
+Na raiz do projeto (tcc-questbook), com o venv ativo:
 ```bash
 uvicorn backend.main:app --reload
 ```
 O servidor estará rodando em: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
+
+Terminal 2: Frontend (Interface)
+Na pasta do frontend (tcc-questbook/frontend):
+```bash
+npm run dev
+```
+A interface iniciará em: http://localhost:5173
+
 ---
 
-## 🧪 Para Testar
+## 🧪 Como Usar
 
-Acesse a documentação interativa (Swagger UI) para testar os endpoints: [https://www.google.com/search?q=http://127.0.0.1:8000/docs](https://www.google.com/search?q=http://127.0.0.1:8000/docs)
+1. Acesse http://localhost:5173 no seu navegador.
 
-Testes Principais:
+2. Upload: Envie um PDF de estudo (capítulo de livro ou apostila).
 
-    1.POST /upload_document: Envie um PDF de texto. O sistema vai ler, salvar no Postgres e buscar questões automaticamente.
-    2.POST /chat_questions: Converse com a IA. Exemplo de JSON:
-```
-{
-  "user_message": "Quero 5 questões sobre Engenharia de Requisitos da banca FGV"
-}
-```
+3. Chat: Digite o que deseja praticar. Exemplo:
 
+    "Quero 5 questões difíceis da banca FGV sobre o assunto deste capítulo."
+
+4. Resultado: A IA analisará o PDF e trará questões contextualizadas.
 ---
 
 ## ⚠️ Solução de Problemas Comuns
 
 * **Erro** ModuleNotFoundError: Você provavelmente esqueceu de ativar o venv.
-* **Erro** de Conexão no Banco: Verifique se as senhas nos arquivos backend/database.py (Postgres) e scripts/indexer.py (MySQL) batem com as do seu computador.
+* **Erro de Conexão (Frontend não fala com Backend)** de Conexão no Banco: Verifique se o uvicorn está rodando e se não há bloqueios de porta.
 * **Erro** model_decommissioned: A Groq atualizou os modelos. Atualize o nome do modelo em backend/llm_agent.py.
