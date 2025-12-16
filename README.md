@@ -130,3 +130,44 @@ A interface iniciará em: http://localhost:5173
 * **Erro** ModuleNotFoundError: Você provavelmente esqueceu de ativar o venv.
 * **Erro de Conexão (Frontend não fala com Backend)** de Conexão no Banco: Verifique se o uvicorn está rodando e se não há bloqueios de porta.
 * **Erro** model_decommissioned: A Groq atualizou os modelos. Atualize o nome do modelo em backend/llm_agent.py.
+
+## 🧪 Validação Científica e Benchmarking
+
+Como parte do Trabalho de Conclusão de Curso, este repositório contém os scripts utilizados para validar as técnicas de Engenharia de Prompt aplicadas no sistema.
+
+Realizamos um experimento comparativo entre 4 abordagens (Zero-Shot, Persona, Few-Shot e Chain-of-Thought) para garantir a mitigação de alucinações na interpretação de intenções do usuário.
+
+### 📂 Estrutura dos Arquivos de Teste
+Os seguintes arquivos na raiz do projeto são responsáveis pela validação:
+
+* `benchmark_completo.py`: Script principal que executa o teste de estresse na IA. Ele submete um dataset de casos de teste (ambíguos e explícitos) contra as 4 técnicas e calcula a Acurácia e Latência.
+* `gerar_grafico.py`: Lê os resultados e gera a visualização gráfica comparativa.
+* `dados_benchmark.csv`: Contém os dados brutos resultantes da última execução do benchmark.
+
+### 🚀 Como Reproduzir os Experimentos
+
+Para rodar o benchmark e validar os resultados apresentados no documento do TCC:
+
+1.  Certifique-se de que as dependências estão instaladas:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2.  Entre na pasta experiments:
+    ```bash
+    cd experiments
+    ```
+
+3.  Execute o script de benchmark:
+    ```bash
+    python benchmark_completo.py
+    ```
+    *Isso gerará um novo arquivo CSV com os resultados em tempo real.*
+4.  (Opcional) Gere o gráfico de resultados:
+    ```bash
+    python gerar_grafico.py
+    ```
+    *Uma imagem `grafico_final_tcc.png` será salva na pasta experiments.*
+
+### 📊 Resultados Obtidos
+Nos testes realizados (dez/2025), a técnica **Few-Shot Learning** demonstrou ser a mais eficaz para o domínio do QuestBook, atingindo **100% de acurácia** na identificação de intenções, com um tempo médio de resposta de ~0.5s.
