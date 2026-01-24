@@ -5,16 +5,18 @@ from io import BytesIO
 from backend.llm_agent import IntentParser
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from backend.database import get_db, get_questions_db
+from backend.models import QuestaoLegada
 
 # Importar módulos internos do projeto
-from backend.database import engine, SessionLocal, Base, get_db
+from backend.database import engine_pg, Base, get_db, get_questions_db
 from backend import models
 from backend.ai_search import QuestSearchEngine
 
 # --- Inicialização ---
 
 # 1. Cria as tabelas no banco de dados automaticamente (se não existirem)
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine_pg)
 
 app = FastAPI(title="QuestBook API")
 
@@ -155,39 +157,92 @@ class ChatRequest(BaseModel):
     document_id: int = None # Opcional: se quiser filtrar por um livro específico
 
 @app.post("/chat_questions")
-async def chat_with_questbook(request: ChatRequest, db: Session = Depends(get_db)):
-    """
-    O endpoint MÁGICO.
-    1. Recebe frase natural.
-    2. LLM entende a intenção.
-    3. Busca Semântica encontra as questões.
-    4. Retorna tudo estruturado.
-    """
-    if not intent_parser or not ai_engine:
-        raise HTTPException(status_code=503, detail="Sistemas de IA indisponíveis.")
+async def chat_with_questbook(
+    request: ChatRequest, 
+    db_app: Session = Depends(get_db),           
+    db_questoes: Session = Depends(get_questions_db) # Injeta o MySQL
+):
+    print(f"💬 Usuário: '{request.user_message}'")
 
-    print(f"💬 Usuário disse: '{request.user_message}'")
-
-    # 1. ENTENDER (LLM)
+    # 1. IA define o tópico
     parsed_intent = intent_parser.parse_user_prompt(request.user_message)
-    print(f"🤖 Intenção extraída: {parsed_intent}")
-
     topic = parsed_intent.get("topic", "Geral")
-    limit = parsed_intent.get("limit", 10)
+    banca_detectada = parsed_intent.get("banca")
+
+    try:
+        qtd_questoes = int(parsed_intent.get("limit", 5))
+    except:
+        qtd_questoes = 5
+        
+    # Trava de Segurança: Para o TCC, vamos limitar a 30 questões por vez
+    # para não travar o servidor se alguém pedir "1 milhão de questões"
+    if qtd_questoes > 30:
+        qtd_questoes = 30
+    # ---------------------
+
+    print(f"🤖 Tópico: {topic} | Filtro Banca: {banca_detectada}")
+
+    # 2. Busca IDs no ChromaDB
+    filtros = {}
+    if banca_detectada:
+        # Se a LLM achou uma banca (ex: "FGV"), adiciona ao filtro
+        filtros["banca"] = banca_detectada.upper() 
+
+    # 3. Busca Vetorial COM FILTROS
+    vetor_results = ai_engine.search_relevant_questions(
+        topic, 
+        filters=filtros, 
+        limit=qtd_questoes
+    )
     
-    # Nota: Filtros de 'banca' e 'dificuldade' exigem que a gente tenha salvo 
-    # esses metadados no ChromaDB durante a indexação. 
-    # Por enquanto, vamos usar o 'topic' para a busca semântica principal.
+    if not vetor_results:
+        return []
 
-    # 2. BUSCAR (ChromaDB)
-    # Aqui a gente usa o 'topic' que a LLM extraiu (ex: "testes de caixa preta")
-    results = ai_engine.search_relevant_questions(topic, limit=limit)
+    # 3. Prepara a busca no MySQL
+    ids_encontrados = []
+    for r in vetor_results:
+        try:
+            # Garante que é inteiro, pois no MySQL questao_id é INT
+            ids_encontrados.append(int(r['external_id']))
+        except:
+            continue
+    
+    # 4. Busca as questões completas
+    questoes_mysql = db_questoes.query(QuestaoLegada).filter(
+        QuestaoLegada.id.in_(ids_encontrados)
+    ).all()
 
-    # 3. SALVAR SUGESTÕES (Opcional, se quiser manter histórico)
-    # ... (código de salvar no banco igual ao upload) ...
-
-    return {
-        "user_message": request.user_message,
-        "ai_understanding": parsed_intent, # Mostra pro usuário o que a IA entendeu
-        "results": results
-    }
+    # 5. Monta o JSON final
+    response_data = []
+    
+    for q_sql in questoes_mysql:
+        # Recupera o score original
+        match_info = next(
+            (
+                item for item in vetor_results 
+                if str(item["external_id"]).strip() == str(q_sql.id).strip()
+            ), 
+            None
+        )
+        score = match_info['confidence'] if match_info else 0
+        
+        response_data.append({
+            "id": q_sql.id,
+            "enunciado": q_sql.enunciado,
+            "alternativas": {
+                "A": q_sql.alternativa_a,
+                "B": q_sql.alternativa_b,
+                "C": q_sql.alternativa_c,
+                "D": q_sql.alternativa_d,
+                "E": q_sql.alternativa_e
+            },
+            "gabarito": q_sql.gabarito,
+            "confidence": score,
+            "metadados": {
+                "banca": q_sql.banca,
+                "ano": q_sql.ano,
+                "assunto": q_sql.assunto
+            }
+        })
+        
+    return response_data
