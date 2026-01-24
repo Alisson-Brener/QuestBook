@@ -1,73 +1,68 @@
-/* src/App.css */
-body {
-  background-color: #f0f2f5;
-  font-family: 'Inter', sans-serif;
-  color: #333;
+/* Adicione no final do App.css */
+
+.alternatives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
 }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-h1 { color: #2c3e50; }
-.tag { background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; vertical-align: middle; }
-
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-}
-
-button {
+.btn-option {
+  text-align: left;
+  padding: 12px;
+  background: #f8f9fa;
+  color: #333333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   cursor: pointer;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  transition: 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-button:disabled { background: #ccc; cursor: not-allowed; }
+.btn-option:hover {
+  background: #e9ecef;
+}
 
-.btn-primary { background-color: #3498db; color: white; width: 100%; margin-top: 10px; }
-.btn-primary:hover { background-color: #2980b9; }
+.option-letter {
+  font-weight: bold;
+  color: #555;
+}
 
-.upload-box { display: flex; gap: 10px; align-items: center; }
-.chat-box textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
+/* Estados de Resposta */
+.btn-option.correct {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
 
-.ai-debug { background: #eee; padding: 10px; border-radius: 5px; font-size: 0.85em; margin-bottom: 20px; }
+.btn-option.wrong {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
 
-.question-card {
-  background: #fff;
-  border-left: 5px solid #27ae60;
-  padding: 20px; /* Mais espaço interno */
-  margin-bottom: 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+.btn-option.correct-reveal {
+  border: 2px solid #28a745; /* Mostra qual era a certa se errar */
+}
+
+.badge-banca {
+  background: #e0f7fa;
+  color: #006064;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.feedback-msg {
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
   border-radius: 4px;
 }
-
-.q-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8em; color: #666; }
-.q-body {
-  font-size: 0.95em;
-  line-height: 1.6;
-  color: #333;
-  white-space: pre-wrap; 
-  word-wrap: break-word;
-}
-
-.q-body img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 10px 0;
-}
-.badge-score { color: #27ae60; font-weight: bold; }
+.feedback-msg.success { color: #155724; background: #d4edda; }
+.feedback-msg.error { color: #721c24; background: #f8d7da; }

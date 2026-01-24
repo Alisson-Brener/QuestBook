@@ -46,3 +46,29 @@ class SuggestedQuestion(Base):
     status = Column(String) # 'APROVADO_IA', 'PENDENTE', etc.
 
     chapter = relationship("Chapter", back_populates="questions")
+
+# --- Modelo para o MySQL (Tabela Existente) ---
+class QuestaoLegada(Base):
+    # Nome exato da tabela no MySQL
+    __tablename__ = "questoes_engenharia_software"
+    
+    # Mapeamento: esquerda = nome no python | direita = nome no banco
+    
+    # O SQLAlchemy exige uma Primary Key. Usamos questao_id.
+    id = Column(Integer, name="questao_id", primary_key=True)
+    
+    disciplina = Column(String, name="disciplina")
+    assunto = Column(String, name="assunto")
+    banca = Column(String, name="banca")
+    ano = Column(Integer, name="ano")
+    
+    enunciado = Column(Text, name="enunciado")
+    
+    # Mapeando alternativaA -> alternativa_a
+    alternativa_a = Column(Text, name="alternativaA")
+    alternativa_b = Column(Text, name="alternativaB")
+    alternativa_c = Column(Text, name="alternativaC")
+    alternativa_d = Column(Text, name="alternativaD")
+    alternativa_e = Column(Text, name="alternativaE")
+    
+    gabarito = Column(String, name="gabarito")

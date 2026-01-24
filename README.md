@@ -47,10 +47,20 @@ npm install
 ```
 
 ### 4. Configurar Variáveis de Ambiente (.env)
-Crie um arquivo chamado .env na raiz do projeto e adicione sua chave da API Groq (necessária para o Chat)
+Crie um arquivo chamado .env na raiz do projeto e adicione sua chave da API Groq (necessária para o Chat), além das suas conexões com os bancos
 
 ```bash
+# --- API KEYS ---
+# Obtenha em: console.groq.com
 GROQ_API_KEY=gsk_sua_chave_aqui...
+
+# --- BANCO DE DADOS DA APLICAÇÃO (PostgreSQL) ---
+# Formato: postgresql://usuario:senha@localhost/nome_do_banco
+DATABASE_URL=postgresql://postgres:sua_senha_pg@localhost/questbook_eng_soft_db
+
+# --- BANCO DE QUESTÕES LEGADO (MySQL) ---
+# Formato: mysql+pymysql://usuario:senha@localhost:3306/nome_do_banco
+MYSQL_URL=mysql+pymysql://root:sua_senha_mysql@localhost:3306/qconcursos
 ```
 (Você pode criar uma em [console.groq.com](console.groq.com))
 
@@ -70,16 +80,14 @@ o projeto utiliza dois bancos de dados simultaneamente.
 ### Passo B: PostgreSQL (Banco do Sistema)
 
 1. Abra o pgAdmin.
-2. Crie um banco de dados vazio chamado questbook_db.
-3. Verifique a senha do seu usuário postgres.
-4. Atualize o arquivo backend/database.py com sua senha local, se necessário:
-> SQLALCHEMY_DATABASE_URL = "postgresql://postgres:SUA_SENHA@localhost/questbook_db"
+2. Crie um banco de dados vazio chamado questbook_eng_soft_db.
+3. Não é necessário criar tabelas manualmente. O SQLAlchemy criará as tabelas automaticamente na primeira execução do backend.
 
 ---
 
 ## 🧠 Inicializando a IA (Indexação)
 
-1. Certifique-se de que o arquivo scripts/indexer.py está com a senha correta do seu MySQL.
+1. Certifique-se de que o arquivo .env está configurado corretamente
 2. Execute o script:
 ```bash
 # Execute da raiz do projeto

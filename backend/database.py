@@ -1,23 +1,38 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
 
-# 1. Configuração da Conexão
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:bookquest25@localhost/questbook_eng_soft_db"
+load_dotenv()
 
-# 2. Criar o "Motor" (Engine)
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# --- 1. BANCO DA APLICAÇÃO (PostgreSQL) ---
+PG_URL = os.getenv("DATABASE_URL")
+if not PG_URL:
+    raise ValueError("❌ Erro: Variável DATABASE_URL não encontrada no .env")
+engine_pg = create_engine(PG_URL)
+SessionLocalPG = sessionmaker(autocommit=False, autoflush=False, bind=engine_pg)
 
-# 3. Criar a "Fábrica de Sessões"
-# Cada requisição do usuário vai ganhar uma sessão temporária com o banco
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# --- 2. BANCO DE QUESTÕES (MySQL) ---
+MYSQL_URL = os.getenv("MYSQL_URL")
+if not MYSQL_URL:
+    raise ValueError("❌ Erro: Variável MYSQL_URL não encontrada no .env")
+engine_mysql = create_engine(MYSQL_URL)
+SessionLocalMySQL = sessionmaker(autocommit=False, autoflush=False, bind=engine_mysql)
 
-# 4. Classe Base para os Modelos
 Base = declarative_base()
 
-# 5. Função utilitária para pegar o banco (Dependency Injection)
+
 def get_db():
-    db = SessionLocal()
+    """Entrega conexão com Postgres"""
+    db = SessionLocalPG()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_questions_db():
+    """Entrega conexão com MySQL"""
+    db = SessionLocalMySQL()
     try:
         yield db
     finally:
