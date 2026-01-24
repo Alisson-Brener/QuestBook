@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, Numeric, TIMESTAMP, text
 from sqlalchemy.orm import relationship
-from backend.database import Base
+from backend.core.database import Base
 
 # Tabela de Usuários
 class User(Base):

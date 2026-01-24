@@ -2,16 +2,13 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from sqlalchemy.orm import Session
 from pypdf import PdfReader
 from io import BytesIO
-from backend.llm_agent import IntentParser
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from backend.database import get_db, get_questions_db
-from backend.models import QuestaoLegada
 
-# Importar módulos internos do projeto
-from backend.database import engine_pg, Base, get_db, get_questions_db
-from backend import models
-from backend.ai_search import QuestSearchEngine
+from backend.core.database import get_db, get_questions_db, engine_pg, Base
+from backend.models.all_models import QuestaoLegada, User, Document, Chapter, SuggestedQuestion
+from backend.services.llm_agent import IntentParser
+from backend.services.ai_search import QuestSearchEngine
 
 # --- Inicialização ---
 

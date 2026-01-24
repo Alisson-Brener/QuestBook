@@ -1,9 +1,14 @@
+import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+
 import sqlalchemy
 import chromadb
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 import time
-import os
 from dotenv import load_dotenv
 
 # ==============================================================================
@@ -11,20 +16,23 @@ from dotenv import load_dotenv
 # ==============================================================================
 
 # 1. Conexão SQL
-load_dotenv() # Carrega o .env
+load_dotenv(os.path.join(project_root, '.env'))
 
 # Pega do ambiente
 DB_CONNECTION_STRING = os.getenv("MYSQL_URL")
+if not DB_CONNECTION_STRING:
+    print("❌ ERRO: Variável MYSQL_URL não encontrada no .env")
+    print("   Verifique se o arquivo .env existe na raiz do projeto.")
+    exit(1)
 
 # 2. Query SQL
-# Já ajustada para pegar BANCA e ANO
 SQL_QUERY = "SELECT questao_id, enunciado, banca, ano FROM questoes_engenharia_software"
 
 # 3. Modelo
 MODEL_NAME = 'paraphrase-multilingual-MiniLM-L12-v2'
 
 # 4. ChromaDB
-CHROMA_PATH = "db_vetorial"
+CHROMA_PATH = os.path.join(project_root, "db_vetorial")
 COLLECTION_NAME = "questbook_v1"
 
 # 5. Batch Size
