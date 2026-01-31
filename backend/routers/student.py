@@ -29,7 +29,7 @@ except Exception as e:
 class ChatRequest(BaseModel):
     user_message: str
     document_id: int = None
-
+    session_id: str = "anonimo"
 # --- ROTA 1: UPLOAD (Lógica Restaurada) ---
 # Mantive o nome original "/upload_document" para não quebrar o front
 @router.post("/upload_document")
@@ -118,7 +118,7 @@ async def chat_with_questbook(
         raise HTTPException(status_code=503, detail="IA ainda está carregando...")
 
     # 1. IA define a intenção
-    parsed_intent = intent_parser.parse_user_prompt(request.user_message)
+    parsed_intent = intent_parser.parse_user_prompt(request.user_message, session_id=request.session_id)
     topic = parsed_intent.get("topic", "Geral")
     banca_detectada = parsed_intent.get("banca")
 

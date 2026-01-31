@@ -76,6 +76,7 @@ function App() {
   const [chatMessage, setChatMessage] = useState("")
   const [questions, setQuestions] = useState([]) // Mudei de chatResponse para questions (array direto)
   const [loading, setLoading] = useState(false)
+  const [sessionId] = useState(() => "sessao_" + Math.random().toString(36).substring(2,9));
 
   // 1. Upload
   const handleUpload = async () => {
@@ -101,7 +102,8 @@ function App() {
     setQuestions([]) // Limpa anterior
     try {
       const res = await axios.post("http://127.0.0.1:8000/chat_questions", {
-        user_message: chatMessage
+        user_message: chatMessage,
+        session_id: sessionId
       })
       // O backend agora retorna uma Lista direta [], não mais um objeto { results: [] }
       setQuestions(res.data) 

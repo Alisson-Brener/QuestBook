@@ -10,67 +10,71 @@ class IntentParser:
     def __init__(self):
         self.client = Groq(api_key=GROQ_API_KEY)
         self.model = "llama-3.3-70b-versatile" 
+        # Memória Volátil: { "session_id": ["msg1", "msg2"] }
+        self.memory = {} 
 
-    def _call_llm(self, messages, temp=0):
+    def _get_context(self, session_id):
+        """Recupera as últimas 3 mensagens para dar contexto"""
+        if not session_id or session_id not in self.memory:
+            return "Nenhum histórico anterior."
+        
+        # Pega as últimas 3 interações
+        history = self.memory[session_id][-3:]
+        return "Histórico da conversa:\n" + "\n".join([f"- {msg}" for msg in history])
+
+    def _save_context(self, session_id, user_text):
+        """Salva a mensagem atual"""
+        if not session_id: return
+        if session_id not in self.memory:
+            self.memory[session_id] = []
+        self.memory[session_id].append(user_text)
+
+    # Mantendo sua técnica vencedora (Few-Shot) mas com Contexto Injetado
+    def parse_user_prompt(self, user_text: str, session_id: str = None):
+        
+        # 1. Recupera Contexto
+        context_str = self._get_context(session_id)
+        
+        # 2. Salva a mensagem atual (para a próxima vez)
+        self._save_context(session_id, user_text)
+
+        sys_prompt = f"""
+        Você é um Especialista em Extração de Intenções para Concursos.
+        
+        CONTEXTO ATUAL (USE ISTO PARA RESOLVER AMBIGUIDADES):
+        {context_str}
+
+        Sua tarefa: Identificar Tópico, Banca e Quantidade.
+        Saída obrigatória: JSON estrito.
+        
+        REGRAS DE MEMÓRIA:
+        1. Se o usuário disser "mais 5" ou "agora da FGV", use o Tópico do histórico.
+        2. Se o usuário mudar de assunto (ex: "agora fale de Java"), ignore o tópico do histórico.
+
+        EXEMPLOS (FEW-SHOT LEARNING):
+        Input: "questoes de engenharia de software"
+        Output: {{"topic": "Engenharia de Software", "limit": 5}}
+
+        Input: "quero 10 da banca cespe"
+        Output: {{"topic": "Geral", "banca": "CESPE", "limit": 10}}
+
+        Input: "mais 5 difíceis" (Considerando que o histórico era sobre Java)
+        Output: {{"topic": "Java", "difficulty": "Difícil", "limit": 5}}
+        """
+
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": user_text}
+        ]
+
         try:
             response = self.client.chat.completions.create(
                 messages=messages,
                 model=self.model,
-                temperature=temp,
+                temperature=0, # Zero para manter a precisão do Few-Shot
                 response_format={"type": "json_object"}
             )
             return json.loads(response.choices[0].message.content)
-        except:
-            return {"topic": "Geral", "error": "failed"}
-
-    # --- TÉCNICA 1: ZERO-SHOT PURO (Baseline) ---
-    def parse_technique_1_zeroshot(self, user_text: str):
-        prompt = f"Retorne um JSON com topic, limit, banca, dificuldade para esta frase: '{user_text}'"
-        return self._call_llm([{"role": "user", "content": prompt}])
-
-    # --- TÉCNICA 2: ROLE-PLAYING (Persona) ---
-    def parse_technique_2_persona(self, user_text: str):
-        sys = """Você é um Especialista em Concursos Públicos. 
-        Sua tarefa é identificar o que o estudante quer estudar.
-        Retorne JSON com topic, limit, banca, dificuldade."""
-        return self._call_llm([
-            {"role": "system", "content": sys},
-            {"role": "user", "content": user_text}
-        ])
-
-    # --- TÉCNICA 3: FEW-SHOT (Exemplos, sem raciocínio) ---
-    def parse_technique_3_fewshot(self, user_text: str):
-        sys = """Extraia entidades em JSON. Siga os exemplos:
-        Input: "questoes de java" -> {"topic": "Java", "limit": 10}
-        Input: "gera ai" -> {"topic": "Geral", "limit": 10}
-        Input: "5 da fgv" -> {"topic": "Geral", "banca": "FGV", "limit": 5}"""
-        return self._call_llm([
-            {"role": "system", "content": sys},
-            {"role": "user", "content": user_text}
-        ])
-
-    # --- TÉCNICA 4: CoT + FEW-SHOT (Avançada) ---
-    def parse_technique_4_cot(self, user_text: str):
-        sys = """Você é um orquestrador. Pense passo a passo antes de responder.
-        1. Identifique Tópicos explícitos. Se não houver, use 'Geral'.
-        2. Identifique Bancas e Números.
-        3. Cuidado com ambiguidades (ex: 'gera ai' = Geral).
-        
-        EXEMPLOS:
-        User: "gera ai"
-        Thought: Usuário vago. Sem tópico. Fallback para Geral.
-        JSON: {"topic": "Geral", "limit": 10}
-
-        User: "banco de dados 5 questoes"
-        Thought: Tópico explícito 'banco de dados'. Limite 5.
-        JSON: {"topic": "Banco de Dados", "limit": 5}
-        
-        Retorne APENAS o JSON final."""
-        return self._call_llm([
-            {"role": "system", "content": sys},
-            {"role": "user", "content": user_text}
-        ])
-
-    # O sistema oficial usa a melhor (Técnica 4)
-    def parse_user_prompt(self, user_text: str):
-        return self.parse_technique_3_fewshot(user_text)
+        except Exception as e:
+            print(f"Erro LLM: {e}")
+            return {"topic": "Geral", "limit": 5}
