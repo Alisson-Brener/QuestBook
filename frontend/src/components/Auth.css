@@ -1,0 +1,270 @@
+/* ----------- FUNDO GERAL ----------- */
+.auth-container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* LOGIN MODE – fundo mais simples */
+.login-mode {
+    background: #0d0d0d;
+}
+
+/* REGISTER MODE – agora com mesmo fundo moderno do login */
+.register-mode {
+    background: linear-gradient(135deg, #0f0f17, #1b1b35, #151525);
+}
+
+
+/* ----------- LOGIN CARD ----------- */
+.auth-card {
+    width: 100%;
+    max-width: 380px;
+    background: #151515;
+    padding: 35px;
+    border-radius: 14px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ----------- REGISTER SPLIT PANEL ----------- */
+.register-panel {
+    display: flex;
+    width: 100%;
+    max-width: 880px;
+    background: #141414;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 0 35px rgba(0,0,0,0.45);
+    animation: fadeIn 0.3s ease;
+}
+
+.register-left {
+    flex: 1;
+    padding: 40px;
+    background: #0e0e0e;
+    border-right: 1px solid #222;
+}
+
+.register-right {
+    flex: 1.2;
+    padding: 45px;
+}
+
+.panel-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* ----------- LOGO ----------- */
+.auth-title {
+    font-size: 34px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.auth-title span {
+    color: #6c63ff;
+}
+
+.auth-title.big {
+    font-size: 44px;
+}
+
+/* ----------- TEXTOS ----------- */
+.auth-subtitle {
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.register-description {
+    color: #bdbdbd;
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+/* ----------- FORM INPUTS ----------- */
+form input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: white;
+    outline: none;
+}
+
+form input:focus {
+    border-color: #6c63ff;
+}
+
+/* ----------- BOTÕES ----------- */
+.auth-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.2s;
+    border: none;
+}
+
+.login-btn {
+    background: #6c63ff;
+    color: white;
+}
+
+.login-btn:hover {
+    background: #5a54db;
+}
+
+.register-btn {
+    background: #3633ff;
+    color: white;
+}
+
+.register-btn:hover {
+    background: #2a28db;
+}
+
+/* ----------- LINKS ----------- */
+.switch-text {
+    margin-top: 15px;
+    color: #ccc;
+}
+
+.switch-text a {
+    color: #6c63ff;
+    font-weight: 600;
+}
+
+/* ----------- ERROS ----------- */
+.auth-error {
+    color: #ff6b6b;
+    margin-top: 10px;
+}
+
+/* ----------- ANIMAÇÃO ----------- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----------- NOVO LOGIN ----------- */
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background: rgba(20, 20, 30, 0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.45);
+    text-align: center;
+    animation: fadeIn 0.35s ease;
+}
+
+/* Fundo moderno para o login */
+.login-mode {
+    background: linear-gradient(135deg, #0f0f17, #1b1b35, #151525);
+}
+
+/* Logo do login */
+.login-logo {
+    font-size: 40px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.login-logo span {
+    color: #6c63ff;
+}
+
+.login-title {
+    color: #dcdcdc;
+    margin-bottom: 25px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Form do login */
+.login-form input {
+    width: 100%;
+    padding: 13px;
+    margin: 10px 0;
+    background: #1d1d27;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 10px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.login-form input:focus {
+    border-color: #6c63ff;
+    box-shadow: 0 0 6px #6c63ff;
+}
+
+/* Botão moderno */
+.modern-btn {
+    background: #6c63ff;
+    color: white;
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 12px;
+    transition: 0.25s;
+}
+
+.modern-btn:hover {
+    background: #5a54db;
+    box-shadow: 0 0 12px #6c63ff;
+}
+
+/* ===== AJUSTE LOGO REGISTER ===== */
+
+.brand-container {
+    display: flex;   
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+}
+
+.register-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;   /* centraliza tudo */
+    justify-content: center; /* centraliza verticalmente */
+    text-align: center;
+}
+
+.register-left .logo_principal {
+    width: 60px;
+    margin-bottom: 10px;
+}
+
+.forgot-password {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.forgot-password a {
+    font-size: 17px;
+    color: #6c63ff;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+    color: #8a84ff;
+}
