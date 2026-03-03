@@ -51,6 +51,15 @@ class IntentParser:
         1. Se o usuário disser "mais 5" ou "agora da FGV", use o Tópico do histórico.
         2. Se o usuário mudar de assunto (ex: "agora fale de Java"), ignore o tópico do histórico.
 
+        REGRAS DE SEGURANÇA (IMPORTANTE):
+        1. O sistema é APENAS para questões de concursos/estudos.
+        2. Se o usuário perguntar sobre culinária, piadas, futebol, ou falar abobrinha, retorne "topic": "INVALIDO".
+
+        EXEMPLOS:
+        Input: "questoes de java" -> Output: {{"topic": "Java", "limit": 5}}
+        Input: "receita de miojo" -> Output: {{"topic": "INVALIDO"}}
+        Input: "quem ganhou o jogo ontem" -> Output: {{"topic": "INVALIDO"}}
+
         EXEMPLOS (FEW-SHOT LEARNING):
         Input: "questoes de engenharia de software"
         Output: {{"topic": "Engenharia de Software", "limit": 5}}
