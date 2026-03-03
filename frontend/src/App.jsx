@@ -1,175 +1,110 @@
-import { useState } from 'react'
+// src/App.jsx
+import { useState, useEffect } from "react";
 import axios from 'axios'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
+import logoPrincipal from "./assets/logo_principal.png"
+import logoHistorico from "./assets/logo_historico.png"
+import ForgotPassword from "./components/ForgotPassword";
 
-// --- COMPONENTE NOVO: CARD DE QUESTÃO INTERATIVO ---
-// Ele cuida da lógica de "Clicou -> Ficou Verde/Vermelho"
-function QuestionCard({ question }) {
-  const [selectedOption, setSelectedOption] = useState(null)
-  const [isCorrect, setIsCorrect] = useState(null)
 
-  const handleOptionClick = (letter) => {
-    // Se já respondeu, não deixa mudar (opcional)
-    if (selectedOption) return 
+// Componentes
+import Sidebar from "./components/Sidebar";
+import UploadPDF from "./components/UploadPDF";
+import ChatQuestions from "./components/ChatQuestions";
+import QuestionList from "./components/QuestionList";
+import Login from "./components/Login";
+import Register from "./components/Register";
 
-    setSelectedOption(letter)
-    
-    // Compara o que clicou com o gabarito que veio do banco
-    // Remove espaços extras e garante maiúsculas para evitar erros bobos
-    const gabaritoLimpo = question.gabarito?.trim().toUpperCase()
-    const clicadoLimpo = letter.trim().toUpperCase()
-    
-    setIsCorrect(gabaritoLimpo === clicadoLimpo)
-  }
-
-  return (
-    <div className="question-card">
-      <div className="q-header">
-        <span className="badge-id">ID: {question.id}</span>
-        <span className="badge-banca">{question.metadados?.banca || "Banca Desconhecida"} ({question.metadados?.ano})</span>
-        <span className="badge-score">Match IA: {(question.confidence * 100).toFixed(0)}%</span>
-      </div>
-
-      {/* ENUNCIADO */}
-      <div className="q-body" dangerouslySetInnerHTML={{ __html: question.enunciado }} />
-
-      {/* ALTERNATIVAS */}
-      <div className="alternatives-list">
-        {Object.entries(question.alternativas).map(([letra, texto]) => {
-          // Lógica de cores
-          let btnClass = "btn-option"
-          if (selectedOption === letra) {
-            btnClass += isCorrect ? " correct" : " wrong"
-          } else if (selectedOption && letra === question.gabarito) {
-            // Mostra a correta se o usuário errou (opcional)
-            btnClass += " correct-reveal"
-          }
-
-          return (
-            <button 
-              key={letra} 
-              className={btnClass} 
-              onClick={() => handleOptionClick(letra)}
-              disabled={!!selectedOption} // Desabilita após responder
-            >
-              <strong className="option-letter">{letra})</strong> 
-              <span dangerouslySetInnerHTML={{ __html: texto }} />
-            </button>
-          )
-        })}
-      </div>
-
-      {/* FEEDBACK FINAL */}
-      {selectedOption && (
-        <div className={`feedback-msg ${isCorrect ? "success" : "error"}`}>
-          {isCorrect ? "🎉 Parabéns! Resposta Correta." : `❌ Errou! O gabarito é a letra ${question.gabarito}.`}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// --- APP PRINCIPAL ---
 function App() {
-  const [file, setFile] = useState(null)
-  const [uploadStatus, setUploadStatus] = useState("")
-  const [chatMessage, setChatMessage] = useState("")
-  const [questions, setQuestions] = useState([]) // Mudei de chatResponse para questions (array direto)
-  const [loading, setLoading] = useState(false)
-  const [sessionId] = useState(() => "sessao_" + Math.random().toString(36).substring(2,9));
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // 1. Upload
-  const handleUpload = async () => {
-    if (!file) return alert("Selecione um arquivo primeiro!")
-    const formData = new FormData()
-    formData.append("file", file)
-    setLoading(true)
-    try {
-      const res = await axios.post("http://127.0.0.1:8000/upload_document", formData)
-      setUploadStatus(`✅ Documento ID: ${res.data.document_id} processado!`)
-    } catch (error) {
-      console.error(error)
-      setUploadStatus("❌ Erro ao enviar arquivo.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Histórico e resposta selecionada
+  const [chatHistory, setChatHistory] = useState(() => {
+    const saved = localStorage.getItem("chatHistory");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // 2. Chat (Busca Hidratada)
-  const handleChat = async () => {
-    if (!chatMessage) return
-    setLoading(true)
-    setQuestions([]) // Limpa anterior
-    try {
-      const res = await axios.post("http://127.0.0.1:8000/chat_questions", {
-        user_message: chatMessage,
-        session_id: sessionId
-      })
-      // O backend agora retorna uma Lista direta [], não mais um objeto { results: [] }
-      setQuestions(res.data) 
-    } catch (error) {
-      console.error(error)
-      alert("Erro ao buscar questões. Verifique se o backend está rodando.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [chatResponse, setChatResponse] = useState(null);
+
+  // Salva histórico sempre que mudar
+  useEffect(() => {
+    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+  }, [chatHistory]);
+
+  // Adiciona nova pergunta e resultado da IA ao histórico
+  const handleNewQuestions = (newData) => {
+    setChatHistory((prev) => [...prev, newData]);
+    setChatResponse(newData); // mostra imediatamente na QuestionList
+  };
+
+  // Seleciona um item do histórico
+  const handleSelectChat = (index) => {
+    setChatResponse(chatHistory[index]);
+  };
 
   return (
-    <div className="container">
-      <header>
-        <h1>📚 QuestBook <span className="tag">TCC Demo</span></h1>
-        <p>Validação de IA com Banco de Questões Real</p>
-      </header>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
 
-      {/* ÁREA DE CONTROLES (LADO A LADO SE POSSÍVEL) */}
-      <div className="controls-area">
-        <section className="card">
-          <h2>1. Upload de Contexto</h2>
-          <div className="input-group">
-            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-            <button onClick={handleUpload} disabled={loading}>
-              {loading ? "..." : "⬆ Enviar PDF"}
-            </button>
-          </div>
-          <small>{uploadStatus}</small>
-        </section>
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/upload" />
+            ) : (
+              <Login onLoginSuccess={() => setIsAuthenticated(true)} />
+            )
+          }
+        />
 
-        <section className="card">
-          <h2>2. O que você quer estudar?</h2>
-          <div className="input-group">
-            <input 
-              type="text" 
-              placeholder="Ex: engenharia de requisitos banca fgv" 
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-            />
-            <button className="btn-primary" onClick={handleChat} disabled={loading}>
-              {loading ? "🔍 Buscando..." : "🔍 Buscar"}
-            </button>
-          </div>
-        </section>
-      </div>
+        <Route
+          path="/register"
+          element={
+            isAuthenticated ? <Navigate to="/upload" /> : <Register />
+          }
+        />
 
-      {/* ÁREA DE RESULTADOS */}
-      <section className="results-area">
-        {questions.length > 0 && (
-          <h3>Encontramos {questions.length} questões baseadas no seu pedido:</h3>
-        )}
-        
-        <div className="questions-list">
-          {questions.map((q) => (
-            <QuestionCard key={q.id} question={q} />
-          ))}
-        </div>
+        <Route
+          path="/forgot-password"
+          element={
+            isAuthenticated ? <Navigate to="/upload" /> : <ForgotPassword />
+          }
+        />
 
-        {questions.length === 0 && !loading && chatMessage && (
-           <p className="placeholder-text">Nenhuma questão encontrada ou aguardando busca...</p>
-        )}
-      </section>
-    </div>
-  )
+        <Route
+          path="/upload"
+          element={
+            <div className="app-container">
+              {/* Sidebar com histórico */}
+              <Sidebar history={chatHistory} onSelectChat={handleSelectChat} />
+
+              {/* Área principal */}
+              <main className="main-content">
+                <header className="header">
+                  <div className="logo-title">
+                    <img src={logoPrincipal} alt="Logo Principal" className="logo_principal" />
+                    <h1 className="login-logo">Quest<span>Book</span></h1>
+                  </div>
+                  <p>Assistente Inteligente de Estudos</p>
+                </header>
+
+                {/* Upload de PDFs */}
+                <UploadPDF onUploadSuccess={() => console.log("Upload concluído")} />
+
+                {/* Chat para gerar questões */}
+                <ChatQuestions onNewQuestions={handleNewQuestions} />
+
+                {/* Lista de questões geradas */}
+                <QuestionList chatResponse={chatResponse} />
+              </main>
+            </div>
+          }
+        />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
