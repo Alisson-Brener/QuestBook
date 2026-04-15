@@ -120,6 +120,16 @@ async def chat_with_questbook(
     # 1. IA define a intenção
     parsed_intent = intent_parser.parse_user_prompt(request.user_message, session_id=request.session_id)
     topic = parsed_intent.get("topic", "Geral")
+
+    if topic == "INVALIDO":
+        return [{
+            "id": -1,
+            "enunciado": "Eu sou um assistente de estudos. Por favor, faça perguntas relacionadas a matérias ou concursos.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 1.0, # Confiança total que é inválido
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
     banca_detectada = parsed_intent.get("banca")
 
     try:
@@ -129,25 +139,60 @@ async def chat_with_questbook(
         
     if qtd_questoes > 30: qtd_questoes = 30
 
+    limite_busca_vertorial = qtd_questoes * 3
+
     print(f"🤖 Tópico: {topic} | Banca: {banca_detectada}")
 
     # 2. Filtros e Busca Vetorial
     filtros = {}
-    if banca_detectada:
-        filtros["banca"] = banca_detectada.upper() 
+    if banca_detectada and banca_detectada.lower() not in ["geral", "todas", "indiferente", "qualquer"]:
+        filtros["banca"] = banca_detectada.upper()
 
+    print(f"🔍 Filtros aplicados no Chroma: {filtros}")
+    
     vetor_results = ai_engine.search_relevant_questions(
         topic, 
         filters=filtros, 
-        limit=qtd_questoes
+        limit=limite_busca_vertorial
     )
-    
-    if not vetor_results:
-        return []
 
-    # 3. Hidratação via ORM (Igual ao seu original)
-    ids_encontrados = []
+    seen_ids = set()
+    unique_results = []
     for r in vetor_results:
+        q_id = r['external_id']
+        if q_id not in seen_ids:
+            seen_ids.add(q_id)
+            unique_results.append(r)
+    
+    if not unique_results:
+        print("⚠️ Busca vetorial retornou vazia.")
+        # Retornamos uma "questão falsa" que na verdade é um aviso
+        return [{
+            "id": -1,
+            "enunciado": f"Desculpe, não encontrei questões sobre '{topic}' com os filtros aplicados (Banca: {banca_detectada or 'Todas'}). Tente outro termo.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 0.0,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
+
+    melhor_score = unique_results[0]['confidence']
+    if melhor_score < 0.5:
+        print(f"⚠️ Resultados encontrados, mas confiança baixa ({melhor_score}). Descartando.")
+        return [{
+            "id": -1,
+            "enunciado": f"Encontrei alguns resultados sobre '{topic}', mas eles parecem pouco relevantes (Confiança baixa). Tente ser mais específico no tema.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": melhor_score,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
+
+    final_results = unique_results[:qtd_questoes]
+
+    # 3. Hidratação via ORM
+    ids_encontrados = []
+    for r in final_results:
         try:
             ids_encontrados.append(int(r['external_id']))
         except:
@@ -164,7 +209,7 @@ async def chat_with_questbook(
     for q_sql in questoes_mysql:
         # Recupera o score do vetor
         match_info = next(
-            (item for item in vetor_results if str(item["external_id"]) == str(q_sql.id)), 
+            (item for item in final_results if str(item["external_id"]) == str(q_sql.id)), 
             None
         )
         score = match_info['confidence'] if match_info else 0
