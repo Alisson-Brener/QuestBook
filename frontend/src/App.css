@@ -242,3 +242,24 @@ button:hover {
 .status-msg.error {
   color: #dc3545;
 }
+
+/* ======== LOGOUT ======== */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 5px;
+}
+
+.logout-btn {
+  width: auto;
+  padding: 8px 16px;
+  margin: 0;
+  background: transparent;
+  border: 1px solid #666;
+  font-size: 0.9rem;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

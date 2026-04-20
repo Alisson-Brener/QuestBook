@@ -3,28 +3,51 @@ import "./auth.css";
 import { useNavigate } from "react-router-dom";
 import logoPrincipal from "../assets/logo_principal.png"
 import { Link } from "react-router-dom";
+import axios from "axios";
+
+const API_URL = "http://localhost:8000";
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage("");
+    setLoading(true);
 
     if (password.length < 6) {
       setErrorMessage("A senha deve ter no mínimo 6 caracteres.");
+      setLoading(false);
       return;
     }
 
-    // Login de exemplo
-    if (email === "user@domain.com" && password === "password123") {
-      onLoginSuccess();      // Marca como autenticado
-      navigate("/upload");   // Redireciona para upload
-    } else {
-      setErrorMessage("Email ou senha incorretos. Verifique ou crie uma conta.");
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password
+      });
+
+      const { access_token } = response.data;
+      
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("userEmail", email);
+      
+      onLoginSuccess();
+      navigate("/upload");
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setErrorMessage("E-mail ou senha incorretos.");
+      } else if (error.response?.data?.detail) {
+        setErrorMessage(error.response.data.detail);
+      } else {
+        setErrorMessage("Erro ao conectar com o servidor. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,8 +75,8 @@ export default function Login({ onLoginSuccess }) {
             required
           />
 
-          <button type="submit" className="auth-btn login-btn modern-btn">
-            Entrar
+          <button type="submit" className="auth-btn login-btn modern-btn" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 

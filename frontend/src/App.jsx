@@ -8,7 +8,7 @@ import logoHistorico from "./assets/logo_historico.png"
 import ForgotPassword from "./components/ForgotPassword";
 
 
-// Componentes
+ // Componentes
 import Sidebar from "./components/Sidebar";
 import UploadPDF from "./components/UploadPDF";
 import ChatQuestions from "./components/ChatQuestions";
@@ -16,8 +16,19 @@ import QuestionList from "./components/QuestionList";
 import Login from "./components/Login";
 import Register from "./components/Register";
 
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const token = localStorage.getItem("token");
+    return !!token;
+  });
 
   // Histórico e resposta selecionada
   const [chatHistory, setChatHistory] = useState(() => {
@@ -41,6 +52,12 @@ function App() {
   // Seleciona um item do histórico
   const handleSelectChat = (index) => {
     setChatResponse(chatHistory[index]);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    setIsAuthenticated(false);
   };
 
   return (
@@ -76,6 +93,9 @@ function App() {
         <Route
           path="/upload"
           element={
+            !isAuthenticated ? (
+              <Navigate to="/login" />
+            ) : (
             <div className="app-container">
               {/* Sidebar com histórico */}
               <Sidebar history={chatHistory} onSelectChat={handleSelectChat} />
@@ -87,7 +107,10 @@ function App() {
                     <img src={logoPrincipal} alt="Logo Principal" className="logo_principal" />
                     <h1 className="login-logo">Quest<span>Book</span></h1>
                   </div>
-                  <p>Assistente Inteligente de Estudos</p>
+                  <div className="header-right">
+                    <p>Assistente Inteligente de Estudos</p>
+                    <button onClick={handleLogout} className="logout-btn">Sair</button>
+                  </div>
                 </header>
 
                 {/* Upload de PDFs */}
@@ -100,6 +123,7 @@ function App() {
                 <QuestionList chatResponse={chatResponse} />
               </main>
             </div>
+            )
           }
         />
       </Routes>

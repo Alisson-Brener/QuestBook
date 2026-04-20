@@ -2,15 +2,20 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./auth.css";
 import logoPrincipal from "../assets/logo_principal.png"
+import axios from "axios";
+
+const API_URL = "http://localhost:8000";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -24,7 +29,28 @@ export default function Register() {
       return;
     }
 
-    navigate("/login"); // Após registrar → vai para upload
+    setLoading(true);
+
+    try {
+      await axios.post(`${API_URL}/auth/register`, {
+        name,
+        email,
+        password,
+        role: "aluno"
+      });
+
+      navigate("/login");
+    } catch (error) {
+      if (error.response?.status === 400) {
+        setError(error.response.data.detail || "E-mail já cadastrado.");
+      } else if (error.response?.data?.detail) {
+        setError(error.response.data.detail);
+      } else {
+        setError("Erro ao conectar com o servidor. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +73,14 @@ export default function Register() {
           <h2 className="panel-title">Criar conta</h2>
 
           <form onSubmit={handleRegister}>
+            <input
+              type="text"
+              placeholder="Nome"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+
             <input
               type="email"
               placeholder="E-mail"
@@ -73,8 +107,8 @@ export default function Register() {
 
             {error && <p className="auth-error">{error}</p>}
 
-            <button type="submit" className="auth-btn register-btn">
-              Registrar
+            <button type="submit" className="auth-btn register-btn" disabled={loading}>
+              {loading ? "Criando conta..." : "Registrar"}
             </button>
           </form>
 
