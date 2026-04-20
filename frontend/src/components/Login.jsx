@@ -31,9 +31,10 @@ export default function Login({ onLoginSuccess }) {
         password
       });
 
-      const { access_token } = response.data;
+      const { access_token, refresh_token } = response.data;
       
       localStorage.setItem("token", access_token);
+      localStorage.setItem("refreshToken", refresh_token);
       localStorage.setItem("userEmail", email);
       
       onLoginSuccess();
