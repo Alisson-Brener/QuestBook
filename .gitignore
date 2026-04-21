@@ -15,3 +15,5 @@ db_vetorial/
 
 # Segredos e Chaves
 .env
+
+node_modules/

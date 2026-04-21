@@ -170,6 +170,7 @@ async def chat_with_questbook(
             "metadados": {"tipo": "AVISO_SISTEMA"}
         }]
     banca_detectada = parsed_intent.get("banca")
+    search_query = parsed_intent.get("search_query", topic) # Usa o topic puro como fallback
 
     try:
         qtd_questoes = int(parsed_intent.get("limit", 5))
@@ -180,7 +181,7 @@ async def chat_with_questbook(
 
     limite_busca_vertorial = qtd_questoes * 3
 
-    print(f"🤖 Tópico: {topic} | Banca: {banca_detectada}")
+    print(f"🤖 Tópico: {topic} | Banca: {banca_detectada} | Busca Otimizada: {search_query}")
 
     # 2. Filtros e Busca Vetorial
     filtros = {}
@@ -190,7 +191,7 @@ async def chat_with_questbook(
     print(f"🔍 Filtros aplicados no Chroma: {filtros}")
     
     vetor_results = ai_engine.search_relevant_questions(
-        topic, 
+        search_query, # <-- Agora busca usando o texto rico, não apenas o Tópico 
         filters=filtros, 
         limit=limite_busca_vertorial
     )
@@ -216,11 +217,12 @@ async def chat_with_questbook(
         }]
 
     melhor_score = unique_results[0]['confidence']
-    if melhor_score < 0.5:
+    # Threshold de 0.4 representa 40% de match absoluto matemático, que é um bom corte para L2 normalizado
+    if melhor_score < 0.4:
         print(f"⚠️ Resultados encontrados, mas confiança baixa ({melhor_score}). Descartando.")
         return [{
             "id": -1,
-            "enunciado": f"Encontrei alguns resultados sobre '{topic}', mas eles parecem pouco relevantes (Confiança baixa). Tente ser mais específico no tema.",
+            "enunciado": f"Encontrei alguns resultados, mas eles parecem pouco relevantes para a busca. Tente ser mais específico.",
             "alternativas": {},
             "gabarito": "N/A",
             "confidence": melhor_score,
