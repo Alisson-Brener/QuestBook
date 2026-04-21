@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from backend.routers import auth
+from backend.routers import auth, teachers
 
 from backend.core.database import engine_pg, Base
 from backend.routers import student
@@ -22,7 +22,10 @@ app.add_middleware(
 # 2. Conecta as rotas de Autenticação
 app.include_router(auth.router)
 
-# 3. Conecta as rotas do estudante
+# 3. Conecta as rotas do professor
+app.include_router(teachers.router, tags=["Teachers"])
+
+# 4. Conecta as rotas do estudante
 app.include_router(student.router, tags=["Student"])
 
 @app.get("/")

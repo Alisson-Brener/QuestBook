@@ -11,6 +11,14 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
     role = Column(String) # 'aluno' ou 'curador'
+    
+    # Campos específicos do professor/curador
+    instituicao = Column(String)
+    formacao = Column(String)
+    area_atuacao = Column(String)
+    biografia = Column(Text)
+    status = Column(String, default="aprovado") # 'aprovado' automaticamente
+    
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
 # Tabela de Documentos (PDFs)

@@ -52,7 +52,8 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token, 
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role
     }
 
 @router.post("/refresh", response_model=Token)
@@ -84,5 +85,6 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
     return {
         "access_token": new_access_token, 
         "refresh_token": new_refresh_token, 
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role
     }
