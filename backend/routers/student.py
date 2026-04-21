@@ -80,10 +80,42 @@ async def upload_document(
     # 4. Chamar a IA para Sugestões
     questions_found = 0
     if ai_engine:
-        print("🧠 Chamando IA para buscar sugestões iniciais...")
-        results = ai_engine.search_relevant_questions(full_text, limit=10)
+        print("🧠 Chamando IA para buscar sugestões iniciais (c/ chunking)...")
         
-        for res in results:
+        # Chunking: divide o texto para não estourar o limite de tokens da IA local
+        chunk_size = 1000
+        overlap = 200
+        chunks = []
+        
+        for i in range(0, len(full_text), chunk_size - overlap):
+            chunk = full_text[i:i + chunk_size]
+            if len(chunk) > 100:
+                chunks.append(chunk)
+                
+        if not chunks:
+            chunks.append(full_text)
+            
+        print(f"📊 PDF dividido em {len(chunks)} fragmentos para melhor análise semântica.")
+        
+        all_results = []
+        seen_ids = set()
+        
+        # Processa cada fragmento e agrega resultados
+        for chunk in chunks:
+            try:
+                chunk_results = ai_engine.search_relevant_questions(chunk, limit=3)
+                for res in chunk_results:
+                    if res['external_id'] not in seen_ids:
+                        seen_ids.add(res['external_id'])
+                        all_results.append(res)
+            except Exception as e:
+                print(f"⚠️ Erro ao processar fragmento: {e}")
+                
+        # Classifica todo o ecossistema coletado para eleger as mais correlacionadas
+        all_results.sort(key=lambda x: x['confidence'], reverse=True)
+        best_results = all_results[:10]
+        
+        for res in best_results:
             status = "APROVADO_IA" if res['confidence'] > 0.7 else "PENDENTE"
             
             db_suggestion = SuggestedQuestion(
@@ -188,48 +220,56 @@ async def chat_with_questbook(
             "metadados": {"tipo": "AVISO_SISTEMA"}
         }]
 
-    final_results = unique_results[:qtd_questoes]
-
-    # 3. Hidratação via ORM
+    # 3. Hidratação via ORM (Recuperando de todos os candidatos sem limitar prematuramente)
     ids_encontrados = []
-    for r in final_results:
+    for r in unique_results:
         try:
             ids_encontrados.append(int(r['external_id']))
         except:
             continue
     
-    # Busca no MySQL usando a classe QuestaoLegada
+    # Busca GERAL no MySQL usando a classe QuestaoLegada
     questoes_mysql = db_questoes.query(QuestaoLegada).filter(
         QuestaoLegada.id.in_(ids_encontrados)
     ).all()
 
-    # 4. Montagem da Resposta
+    # Mapeamento para acesso O(1) rápido
+    mapa_mysql = {q.id: q for q in questoes_mysql}
+
+    # 4. Montagem da Resposta na exata ordem devolvida pela IA (por relevância)
     response_data = []
     
-    for q_sql in questoes_mysql:
-        # Recupera o score do vetor
-        match_info = next(
-            (item for item in final_results if str(item["external_id"]) == str(q_sql.id)), 
-            None
-        )
-        score = match_info['confidence'] if match_info else 0
-        
-        response_data.append({
-            "id": q_sql.id,
-            "enunciado": q_sql.enunciado,
-            "alternativas": {
-                "A": q_sql.alternativa_a,
-                "B": q_sql.alternativa_b,
-                "C": q_sql.alternativa_c,
-                "D": q_sql.alternativa_d,
-                "E": q_sql.alternativa_e
-            },
-            "gabarito": q_sql.gabarito,
-            "confidence": score,
-            "metadados": {
-                "banca": q_sql.banca,
-                "ano": q_sql.ano
-            }
-        })
+    for vetor_result in unique_results:
+        try:
+            q_id = int(vetor_result['external_id'])
+        except:
+            continue
+            
+        # Verifica se o ID vetorial ainda existe no Banco Relacional
+        if q_id in mapa_mysql:
+            q_sql = mapa_mysql[q_id]
+            score = vetor_result['confidence']
+            
+            response_data.append({
+                "id": q_sql.id,
+                "enunciado": q_sql.enunciado,
+                "alternativas": {
+                    "A": q_sql.alternativa_a,
+                    "B": q_sql.alternativa_b,
+                    "C": q_sql.alternativa_c,
+                    "D": q_sql.alternativa_d,
+                    "E": q_sql.alternativa_e
+                },
+                "gabarito": q_sql.gabarito,
+                "confidence": score,
+                "metadados": {
+                    "banca": q_sql.banca,
+                    "ano": q_sql.ano
+                }
+            })
+            
+            # Garante que atendeu EXATAMENTE à cota exigida, driblando 'buracos' de DB
+            if len(response_data) >= qtd_questoes:
+                break
         
     return response_data
