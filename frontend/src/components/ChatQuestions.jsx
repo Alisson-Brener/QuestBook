@@ -10,7 +10,10 @@ export default function ChatQuestions({ onNewQuestions }) {
   const [chatMessage, setChatMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const textareaRef = useRef(null);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
   const autoResize = () => {
     const textarea = textareaRef.current;
@@ -21,7 +24,6 @@ export default function ChatQuestions({ onNewQuestions }) {
     const newHeight = Math.min(scrollHeight, MAX_TEXTAREA_HEIGHT);
     textarea.style.height = `${newHeight}px`;
 
-    // Muda para "expanded" se o texto ultrapassar o limite de altura
     setIsExpanded(scrollHeight > EXPANDED_HEIGHT_THRESHOLD);
   };
 
@@ -29,12 +31,27 @@ export default function ChatQuestions({ onNewQuestions }) {
     autoResize();
   }, [chatMessage]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSend = async () => {
     if (!chatMessage.trim() || loading) return;
 
     setLoading(true);
     try {
-      // Correção: Em projetos Vite, usamos import.meta.env em vez de process.env
       const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
 
       const res = await axios.post(`${apiUrl}/chat_questions`, {
@@ -53,7 +70,6 @@ export default function ChatQuestions({ onNewQuestions }) {
       }
     } catch (err) {
       console.error("Erro na comunicação com a API:", err);
-      // Dica Sênior: Substitua o alert por um componente de Toast (ex: react-toastify ou sonner)
       alert("Erro ao falar com a IA. Tente novamente mais tarde.");
     } finally {
       setLoading(false);
@@ -67,11 +83,83 @@ export default function ChatQuestions({ onNewQuestions }) {
     }
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleMenuOptionClick = () => {
+    setIsMenuOpen(false);
+  };
+
   const isButtonVisible = chatMessage.trim().length > 0 || loading;
 
   return (
     <div className="chat-input-container">
       <div className={`chat-input-wrapper ${isExpanded ? "expanded" : ""}`}>
+        <button
+          ref={buttonRef}
+          className={`action-menu-button ${isMenuOpen ? "active" : ""} ${isExpanded ? "expanded" : ""}`}
+          onClick={toggleMenu}
+          aria-label="Abrir menu de ações"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+
+        <div
+          ref={menuRef}
+          className={`action-menu ${isMenuOpen ? "open" : ""} ${isExpanded ? "expanded" : ""}`}
+        >
+          <button
+            className="action-menu-item"
+            onClick={handleMenuOptionClick}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+            </svg>
+            <span>Enviar arquivos</span>
+          </button>
+
+          <button
+            className="action-menu-item"
+            onClick={handleMenuOptionClick}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            <span>Adicionar do Drive</span>
+          </button>
+        </div>
+
         <textarea
           ref={textareaRef}
           id="chat-input-textarea"
@@ -92,7 +180,6 @@ export default function ChatQuestions({ onNewQuestions }) {
           aria-label="Enviar mensagem"
         >
           {loading ? (
-            /* SVG do Spinner com tamanhos definidos */
             <svg
               className="spinner animate-spin"
               viewBox="0 0 24 24"
@@ -111,7 +198,6 @@ export default function ChatQuestions({ onNewQuestions }) {
               />
             </svg>
           ) : (
-            /* SVG da Seta para cima COM tamanhos definidos para garantir a renderização */
             <svg
               viewBox="0 0 24 24"
               width="20"

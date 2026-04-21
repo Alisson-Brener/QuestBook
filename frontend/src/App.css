@@ -568,8 +568,8 @@ button:hover {
 
   /* Estado Inicial (Pill-shaped) */
   border-radius: 40px;
-  padding: 6px 56px 6px 20px;
-  /* Espaço para o botão à direita */
+  padding: 6px 56px 6px 52px;
+  /* Espaço para o botão + à esquerda e send à direita */
 
   transition: border-radius 0.4s cubic-bezier(0.165, 0.84, 0.44, 1),
     box-shadow 0.3s ease,
@@ -666,6 +666,129 @@ button:hover {
   width: 18px;
   height: 18px;
   transition: transform 0.3s ease;
+}
+
+/* ======== ACTION MENU BUTTON ======== */
+.action-menu-button {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(107, 92, 255, 0.15);
+  border: 1px solid rgba(107, 92, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: 0;
+  z-index: 15;
+}
+
+.action-menu-button.expanded {
+  top: auto;
+  bottom: 8px;
+  transform: none;
+}
+
+.action-menu-button:hover {
+  background: rgba(107, 92, 255, 0.25);
+  color: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.action-menu-button.expanded:hover {
+  transform: scale(1.05);
+}
+
+.action-menu-button.active {
+  background: rgba(107, 92, 255, 0.3);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.action-menu-button.expanded.active {
+  transform: rotate(45deg);
+}
+
+.action-menu-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ======== ACTION DROPDOWN MENU ======== */
+.action-menu {
+  position: absolute;
+  top: 50%;
+  left: 50px;
+  transform: translateY(-50%);
+  min-width: 180px;
+  background: rgba(30, 31, 38, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(107, 92, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(107, 92, 255, 0.08);
+  padding: 6px;
+  z-index: 20;
+
+  opacity: 0;
+  transform: translateY(-50%) translateX(-8px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.action-menu.expanded {
+  top: auto;
+  bottom: 48px;
+  left: 10px;
+  transform: translateX(0) scale(0.95);
+}
+
+.action-menu.open {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.action-menu.expanded.open {
+  transform: translateX(0) scale(1);
+}
+
+.action-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.action-menu-item:hover {
+  background: rgba(107, 92, 255, 0.15);
+  color: #fff;
+}
+
+.action-menu-item svg {
+  flex-shrink: 0;
+  color: rgba(107, 92, 255, 0.8);
+}
+
+.action-menu-item:hover svg {
+  color: #9b8aff;
 }
 
 /* Spinner Styles */
