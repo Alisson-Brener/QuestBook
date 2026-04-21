@@ -672,105 +672,123 @@ button:hover {
 .action-menu-button {
   position: absolute;
   top: 50%;
-  left: 10px;
+  /* Centraliza verticalmente no estado pill */
+  left: 12px;
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
   min-width: 32px;
   padding: 0;
   border-radius: 50%;
-  background: rgba(107, 92, 255, 0.15);
-  border: 1px solid rgba(107, 92, 255, 0.3);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(107, 92, 255, 0.1);
+  border: 1px solid rgba(107, 92, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   margin: 0;
   z-index: 15;
 }
 
 .action-menu-button.expanded {
   top: auto;
-  bottom: 8px;
+  bottom: 11px;
+  /* Fica no canto inferior esquerdo quando expandido */
   transform: none;
 }
 
 .action-menu-button:hover {
-  background: rgba(107, 92, 255, 0.25);
+  background: rgba(107, 92, 255, 0.2);
   color: #fff;
+  border-color: rgba(107, 92, 255, 0.4);
   transform: translateY(-50%) scale(1.05);
+  /* Preserva a centralização e adiciona um leve zoom */
 }
 
 .action-menu-button.expanded:hover {
   transform: scale(1.05);
+  /* No estado expandido não usamos translateY(-50%) */
 }
 
 .action-menu-button.active {
   background: rgba(107, 92, 255, 0.3);
+  color: #fff;
   transform: translateY(-50%) rotate(45deg);
+}
+
+.action-menu-button.active:hover {
+  transform: translateY(-50%) rotate(45deg) scale(1.05);
 }
 
 .action-menu-button.expanded.active {
   transform: rotate(45deg);
 }
 
+.action-menu-button.expanded.active:hover {
+  transform: rotate(45deg) scale(1.05);
+}
+
 .action-menu-button svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 /* ======== ACTION DROPDOWN MENU ======== */
 .action-menu {
   position: absolute;
-  top: 50%;
-  left: 50px;
-  transform: translateY(-50%);
-  min-width: 180px;
-  background: rgba(30, 31, 38, 0.98);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(107, 92, 255, 0.2);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(107, 92, 255, 0.08);
-  padding: 6px;
-  z-index: 20;
+  bottom: 50%;
+  left: 8px;
+  min-width: 210px;
+  background: rgba(22, 23, 27, 0.98);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(107, 92, 255, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(107, 92, 255, 0.1);
+  padding: 2px 8px 8px 8px;
+  z-index: 100;
 
   opacity: 0;
-  transform: translateY(-50%) translateX(-8px) scale(0.95);
   pointer-events: none;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  /* Animação a partir do canto inferior esquerdo */
+  transform-origin: bottom left;
+  transform: translateY(-28px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .action-menu.expanded {
-  top: auto;
-  bottom: 48px;
-  left: 10px;
-  transform: translateX(0) scale(0.95);
+  bottom: 52px;
+  transform: scale(0.9);
 }
 
 .action-menu.open {
   opacity: 1;
-  transform: translateY(-50%) translateX(0) scale(1);
+  transform: translateY(-28px) scale(1);
   pointer-events: auto;
 }
 
 .action-menu.expanded.open {
-  transform: translateX(0) scale(1);
+  transform: scale(1);
 }
 
 .action-menu-item {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 10px 14px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 500;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -784,11 +802,17 @@ button:hover {
 
 .action-menu-item svg {
   flex-shrink: 0;
-  color: rgba(107, 92, 255, 0.8);
+  color: rgba(107, 92, 255, 0.7);
+  width: 18px;
+  height: 18px;
 }
 
 .action-menu-item:hover svg {
   color: #9b8aff;
+}
+
+.hidden-file-input {
+  display: none;
 }
 
 /* Spinner Styles */
