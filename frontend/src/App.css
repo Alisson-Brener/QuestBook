@@ -267,7 +267,7 @@ button:hover {
 /* ======== DASHBOARD DO PROFESSOR ======== */
 .dashboard-container {
   min-height: 100vh;
-  background-color: #0e0f11;
+  background-color: #0d0d0d;
   font-family: 'Inter', sans-serif;
   color: #e6e6e6;
 }
@@ -276,75 +276,132 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
-  background: #141519;
-  border-bottom: 1px solid rgba(100, 100, 255, 0.25);
+  padding: 16px 24px;
+  background: transparent;
+  border-bottom: 1px solid #2d2d2d;
 }
 
-.dashboard-header .logo-title {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.dashboard-header h1 {
-  font-size: 1.8rem;
-  color: white;
-  margin: 0;
-}
-
-.dashboard-header .logout-btn {
-  margin: 0;
-  width: auto;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid #666;
-}
-
-.dashboard-main {
-  padding: 40px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.profile-card, .welcome-card {
-  background: #141519;
-  padding: 24px;
-  border-radius: 14px;
-  border: 1px solid rgba(100, 100, 255, 0.25);
-  margin-bottom: 20px;
-}
-
-.profile-card h2, .welcome-card h2 {
-  margin-top: 0;
-  color: white;
-}
-
-.profile-info {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
-.info-row {
+.header-left .logo_principal {
+  width: 32px;
+  height: 32px;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.header-nav {
   display: flex;
-  gap: 10px;
+  gap: 24px;
 }
 
-.info-row strong {
-  color: #999;
-  min-width: 120px;
-}
-
-.status-badge {
-  margin-top: 15px;
-}
-
-.status-approved {
-  display: inline-block;
-  padding: 4px 12px;
-  background: rgba(46, 204, 113, 0.2);
-  color: #2ecc71;
-  border-radius: 4px;
+.nav-link {
   font-size: 0.9rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #fff;
+}
+
+.dashboard-main {
+  padding: 40px 24px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.loading-text {
+  text-align: center;
+  margin-top: 100px;
+  color: #6b7280;
+}
+
+.welcome-section {
+  margin-bottom: 40px;
+}
+
+.welcome-section h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  color: #fff;
+  margin: 0 0 8px 0;
+}
+
+.welcome-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.profile-section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin: 0;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.profile-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.profile-value {
+  font-size: 0.95rem;
+  color: #e5e7eb;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: #22c55e;
 }
