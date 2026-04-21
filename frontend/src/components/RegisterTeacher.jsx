@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./auth.css";
+import "./Auth.css";
 import logoPrincipal from "../assets/logo_principal.png"
 import axios from "axios";
 
 const API_URL = "http://localhost:8000";
 
-export default function Register() {
+export default function RegisterTeacher() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [instituicao, setInstituicao] = useState("");
+  const [formacao, setFormacao] = useState("");
+  const [areaAtuacao, setAreaAtuacao] = useState("");
+  const [biografia, setBiografia] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,22 +33,31 @@ export default function Register() {
       return;
     }
 
+    if (!instituicao || !formacao || !areaAtuacao) {
+      setError("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await axios.post(`${API_URL}/auth/register`, {
+      await axios.post(`${API_URL}/teachers/register`, {
         name,
         email,
         password,
-        role: "aluno"
+        role: "curador",
+        instituicao,
+        formacao,
+        area_atuacao: areaAtuacao,
+        biografia: biografia || null
       });
 
       navigate("/login");
-    } catch (error) {
-      if (error.response?.status === 400) {
-        setError(error.response.data.detail || "E-mail já cadastrado.");
-      } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
+    } catch (err) {
+      if (err.response?.status === 400) {
+        setError(err.response.data.detail || "E-mail já cadastrado.");
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
       } else {
         setError("Erro ao conectar com o servidor. Tente novamente.");
       }
@@ -65,17 +78,17 @@ export default function Register() {
           </div>
 
           <p className="register-description">
-            Crie sua conta e estude com facilidade, enviando PDFs e reforçando seu aprendizado com questões objetivas.
+            Torne-se um curador e ajude estudantes a vencerem concursos e vestibulares com questões de qualidade.
           </p>
         </div>
 
         <div className="register-right">
-          <h2 className="panel-title">Criar conta</h2>
+          <h2 className="panel-title">Cadastro de Professor</h2>
 
           <form onSubmit={handleRegister}>
             <input
               type="text"
-              placeholder="Nome"
+              placeholder="Nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -87,6 +100,38 @@ export default function Register() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+            />
+
+            <input
+              type="text"
+              placeholder="Instituição de ensino *"
+              value={instituicao}
+              onChange={(e) => setInstituicao(e.target.value)}
+              required
+            />
+
+            <input
+              type="text"
+              placeholder="Formação acadêmica *"
+              value={formacao}
+              onChange={(e) => setFormacao(e.target.value)}
+              required
+            />
+
+            <input
+              type="text"
+              placeholder="Área de atuação *"
+              value={areaAtuacao}
+              onChange={(e) => setAreaAtuacao(e.target.value)}
+              required
+            />
+
+            <textarea
+              placeholder="Biografia (opcional)"
+              value={biografia}
+              onChange={(e) => setBiografia(e.target.value)}
+              rows={3}
+              style={{ resize: "vertical" }}
             />
 
             <input
@@ -108,7 +153,7 @@ export default function Register() {
             {error && <p className="auth-error">{error}</p>}
 
             <button type="submit" className="auth-btn register-btn" disabled={loading}>
-              {loading ? "Criando conta..." : "Registrar"}
+              {loading ? "Criando conta..." : "Cadastrar"}
             </button>
           </form>
 
