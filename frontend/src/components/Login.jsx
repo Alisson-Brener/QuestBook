@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./auth.css";
 import { useNavigate } from "react-router-dom";
 import logoPrincipal from "../assets/logo_principal.png"
@@ -13,6 +13,13 @@ export default function Login({ onLoginSuccess }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const savedRole = localStorage.getItem("userRole");
+    if (savedRole === "curador") {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -31,14 +38,17 @@ export default function Login({ onLoginSuccess }) {
         password
       });
 
-      const { access_token, refresh_token } = response.data;
+      const { access_token, refresh_token, role } = response.data;
       
       localStorage.setItem("token", access_token);
       localStorage.setItem("refreshToken", refresh_token);
       localStorage.setItem("userEmail", email);
+      localStorage.setItem("userRole", role || "aluno");
       
       onLoginSuccess();
-      navigate("/upload");
+      
+      const destination = role === "curador" ? "/dashboard" : "/upload";
+      navigate(destination);
     } catch (error) {
       if (error.response?.status === 401) {
         setErrorMessage("E-mail ou senha incorretos.");
@@ -90,6 +100,11 @@ export default function Login({ onLoginSuccess }) {
         <p className="switch-text">
           Não tem uma conta?
           <a href="/register"> Criar agora</a>
+        </p>
+
+        <p className="switch-text" style={{ marginTop: "10px" }}>
+          É professor?
+          <a href="/register-teacher"> Criar conta de professor</a>
         </p>
       </div>
     </div>
