@@ -20,6 +20,9 @@ class User(Base):
     status = Column(String, default="aprovado") # 'aprovado' automaticamente
     
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+    
+    # Relacionamento com respostas
+    answers = relationship("UserAnswer", back_populates="user")
 
 # Tabela de Documentos (PDFs)
 class Document(Base):
@@ -82,3 +85,17 @@ class QuestaoLegada(Base):
     alternativa_e = Column(Text, name="alternativaE")
     
     gabarito = Column(String, name="gabarito")
+
+# Tabela de Respostas do Usuário
+class UserAnswer(Base):
+    __tablename__ = "user_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    question_id = Column(Integer) # ID da questão no MySQL (QuestaoLegada)
+    selected_option = Column(String(1)) # 'A', 'B', 'C', 'D', 'E'
+    is_correct = Column(Integer) # 1 para correto, 0 para incorreto
+    topic = Column(String) # Guardar o tópico para facilitar estatísticas
+    answered_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+
+    user = relationship("User", back_populates="answers")

@@ -6,7 +6,7 @@ from pypdf import PdfReader # Usando o pypdf moderno que você já usava
 
 # --- Imports da Nova Estrutura ---
 from backend.core.database import get_db, get_questions_db
-from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion
+from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion, UserAnswer
 from backend.services.ai_search import QuestSearchEngine
 # Importa a classe IntentParser de onde ela estiver (llm_agent ou intent_parser)
 from backend.services.llm_agent import IntentParser 
@@ -30,6 +30,13 @@ class ChatRequest(BaseModel):
     user_message: str
     document_id: int = None
     session_id: str = "anonimo"
+
+class AnswerRequest(BaseModel):
+    question_id: int
+    selected_option: str
+    is_correct: bool
+    topic: str = "Geral"
+
 # --- ROTA 1: UPLOAD (Lógica Restaurada) ---
 # Mantive o nome original "/upload_document" para não quebrar o front
 @router.post("/upload_document")
@@ -233,3 +240,68 @@ async def chat_with_questbook(
         })
         
     return response_data
+
+# --- NOVAS ROTAS DE ESTATÍSTICAS ---
+
+@router.post("/answer")
+async def record_answer(request: AnswerRequest, db: Session = Depends(get_db)):
+    # Mock user_id = 1
+    db_answer = UserAnswer(
+        user_id=1,
+        question_id=request.question_id,
+        selected_option=request.selected_option,
+        is_correct=1 if request.is_correct else 0,
+        topic=request.topic
+    )
+    db.add(db_answer)
+    db.commit()
+    return {"status": "success"}
+
+@router.get("/stats")
+async def get_stats(db: Session = Depends(get_db)):
+    user_id = 1
+    answers = db.query(UserAnswer).filter(UserAnswer.user_id == user_id).all()
+    
+    total = len(answers)
+    if total == 0:
+        return {
+            "summary": {
+                "total_answered": 0,
+                "correct_answers": 0,
+                "incorrect_answers": 0,
+                "overall_accuracy": 0
+            },
+            "topic_performance": [],
+            "recent_activity": []
+        }
+
+    correct = sum(1 for a in answers if a.is_correct == 1)
+    
+    topics = {}
+    for a in answers:
+        t = a.topic or "Geral"
+        if t not in topics: topics[t] = {"total": 0, "correct": 0}
+        topics[t]["total"] += 1
+        if a.is_correct == 1: topics[t]["correct"] += 1
+            
+    topic_performance = [{
+        "topic": t,
+        "accuracy": round((d["correct"] / d["total"]) * 100, 1),
+        "total": d["total"]
+    } for t, d in topics.items()]
+        
+    recent = [{
+        "date": a.answered_at.strftime("%d/%m"),
+        "is_correct": bool(a.is_correct)
+    } for a in answers[-10:]]
+    
+    return {
+        "summary": {
+            "total_answered": total,
+            "correct_answers": correct,
+            "incorrect_answers": total - correct,
+            "overall_accuracy": round((correct / total) * 100, 1)
+        },
+        "topic_performance": topic_performance,
+        "recent_activity": recent
+    }

@@ -1,5 +1,7 @@
 // src/components/QuestionList.jsx
 import { useState } from "react"
+import axios from "axios"
+import { generateQuestionsPDF } from "../utils/pdfGenerator.js"
 
 export default function QuestionList({ chatResponse }) {
   const [selectedAnswers, setSelectedAnswers] = useState({})
@@ -20,16 +22,48 @@ export default function QuestionList({ chatResponse }) {
     }))
   }
 
-  const handleSubmit = (qIndex, gabarito) => {
+  const handleSubmit = async (qIndex, questionData) => {
+    const selected = selectedAnswers[qIndex];
+    if (!selected) return;
+
+    const isCorrect = selected === questionData.gabarito;
+    
     setSubmitted((prev) => ({
       ...prev,
       [qIndex]: true,
-    }))
+    }));
+
+    try {
+      await axios.post("http://localhost:8000/student/answer", {
+        question_id: questionData.id || 0,
+        selected_option: selected,
+        is_correct: isCorrect,
+        topic: questionData.assunto || "Geral"
+      });
+    } catch (error) {
+      console.error("Erro ao salvar resposta:", error);
+    }
+  }
+
+  const handleExportPDF = () => {
+    if (questions && questions.length > 0) {
+      generateQuestionsPDF(questions);
+    }
   }
 
   return (
     <section className="results-area">
-      <h3>Resultado da IA</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+        <h3>Resultado da IA</h3>
+        {questions && questions.length > 0 && (
+          <button 
+            onClick={handleExportPDF}
+            style={{ marginTop: 0, width: "auto", padding: "8px 16px" }}
+          >
+            Exporta PDF
+          </button>
+        )}
+      </div>
 
       <div className="questions-list">
         {Array.isArray(questions) && questions.length > 0 ? (
@@ -101,7 +135,7 @@ export default function QuestionList({ chatResponse }) {
                   <button
                     style={{ marginTop: "12px" }}
                     disabled={!selected}
-                    onClick={() => handleSubmit(index, gabarito)}
+                    onClick={() => handleSubmit(index, q)}
                   >
                     Enviar Resposta
                   </button>

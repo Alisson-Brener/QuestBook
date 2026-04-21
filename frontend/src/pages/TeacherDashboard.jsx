@@ -39,7 +39,7 @@ export default function TeacherDashboard() {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <p>Carregando...</p>
+        <p className="loading-text">Carregando...</p>
       </div>
     );
   }
@@ -47,59 +47,65 @@ export default function TeacherDashboard() {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <div className="logo-title">
+        <div className="header-left">
           <img src={logoPrincipal} alt="Logo" className="logo_principal" />
-          <h1>Quest<span>Book</span></h1>
+          <span className="logo-text">QuestBook</span>
         </div>
-        <button onClick={handleLogout} className="logout-btn">Sair</button>
+        <nav className="header-nav">
+          <span className="nav-link">Perfil</span>
+          <span className="nav-link" onClick={handleLogout}>Sair</span>
+        </nav>
       </header>
 
       <main className="dashboard-main">
-        <section className="profile-card">
-          <h2>Meu Perfil</h2>
+        <div className="welcome-section">
+          <h1>Bem-vindo, {profile?.name?.split(" ")[0] || "Professor"}!</h1>
+          <p className="welcome-subtitle">
+            Este é o seu painel de curador. Gerencie suas informações e acompanhe as atividades.
+          </p>
+        </div>
+
+        <section className="profile-section">
+          <div className="section-header">
+            <h2>Informações do Perfil</h2>
+          </div>
           
           {profile && (
-            <div className="profile-info">
-              <div className="info-row">
-                <strong>Nome:</strong>
-                <span>{profile.name}</span>
+            <div className="profile-grid">
+              <div className="profile-item">
+                <span className="profile-label">Nome</span>
+                <span className="profile-value">{profile.name}</span>
               </div>
-              <div className="info-row">
-                <strong>Email:</strong>
-                <span>{profile.email}</span>
+              <div className="profile-item">
+                <span className="profile-label">Email</span>
+                <span className="profile-value">{profile.email}</span>
               </div>
-              <div className="info-row">
-                <strong>Instituição:</strong>
-                <span>{profile.instituicao || "Não informado"}</span>
+              <div className="profile-item">
+                <span className="profile-label">Instituição</span>
+                <span className="profile-value">{profile.instituicao || "Não informado"}</span>
               </div>
-              <div className="info-row">
-                <strong>Formação:</strong>
-                <span>{profile.formacao || "Não informado"}</span>
+              <div className="profile-item">
+                <span className="profile-label">Formação</span>
+                <span className="profile-value">{profile.formacao || "Não informado"}</span>
               </div>
-              <div className="info-row">
-                <strong>Área de atuação:</strong>
-                <span>{profile.area_atuacao || "Não informado"}</span>
+              <div className="profile-item">
+                <span className="profile-label">Área de atuação</span>
+                <span className="profile-value">{profile.area_atuacao || "Não informado"}</span>
               </div>
               {profile.biografia && (
-                <div className="info-row">
-                  <strong>Biografia:</strong>
-                  <span>{profile.biografia}</span>
+                <div className="profile-item full-width">
+                  <span className="profile-label">Biografia</span>
+                  <span className="profile-value">{profile.biografia}</span>
                 </div>
               )}
             </div>
           )}
         </section>
 
-        <section className="welcome-card">
-          <h2>Bem-vindo, Professor!</h2>
-          <p>
-            Você está no painel de curador do QuestBook. Aqui você pode gerenciar 
-            seu perfil e acompanhar as atividades da plataforma.
-          </p>
-          <div className="status-badge">
-            <span className="status-approved">Conta Ativa</span>
-          </div>
-        </section>
+        <div className="status-indicator">
+          <span className="status-dot"></span>
+          <span className="status-text">Conta Ativa</span>
+        </div>
       </main>
     </div>
   );
