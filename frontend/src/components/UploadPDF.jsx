@@ -47,7 +47,7 @@ export default function UploadPDF({ onUploadSuccess }) {
         <p style={{ color: statusType === "success" ? "green" : "red" }}>
           {statusMsg}
         </p>
-)}
+      )}
     </section>
   );
 }
