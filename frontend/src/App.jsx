@@ -8,13 +8,16 @@ import logoHistorico from "./assets/logo_historico.png"
 import ForgotPassword from "./components/ForgotPassword";
 
 
- // Componentes
+//  Componentes
 import Sidebar from "./components/Sidebar";
 import UploadPDF from "./components/UploadPDF";
 import ChatQuestions from "./components/ChatQuestions";
 import QuestionList from "./components/QuestionList";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import RegisterTeacher from "./components/RegisterTeacher";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -30,21 +33,21 @@ axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = localStorage.getItem("refreshToken");
         if (refreshToken) {
           const response = await axios.post(`${API_URL}/auth/refresh`, {
             refresh_token: refreshToken
           });
-          
+
           const { access_token, refresh_token } = response.data;
           localStorage.setItem("token", access_token);
           localStorage.setItem("refreshToken", refresh_token);
-          
+
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return axios(originalRequest);
         }
@@ -55,7 +58,7 @@ axios.interceptors.response.use(
         window.location.href = "/login";
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -94,6 +97,7 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("userRole");
     setIsAuthenticated(false);
   };
 
@@ -121,6 +125,35 @@ function App() {
         />
 
         <Route
+          path="/register-teacher"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" /> : <RegisterTeacher />
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            !isAuthenticated ? (
+              <Navigate to="/login" />
+            ) : (
+              <TeacherDashboard />
+            )
+          }
+        />
+
+        <Route
+          path="/student-dashboard"
+          element={
+            !isAuthenticated ? (
+              <Navigate to="/login" />
+            ) : (
+              <StudentDashboard />
+            )
+          }
+        />
+
+        <Route
           path="/forgot-password"
           element={
             isAuthenticated ? <Navigate to="/upload" /> : <ForgotPassword />
@@ -133,33 +166,33 @@ function App() {
             !isAuthenticated ? (
               <Navigate to="/login" />
             ) : (
-            <div className="app-container">
-              {/* Sidebar com histórico */}
-              <Sidebar history={chatHistory} onSelectChat={handleSelectChat} />
+              <div className="app-container">
+                {/* Sidebar com histórico */}
+                <Sidebar history={chatHistory} onSelectChat={handleSelectChat} />
 
-              {/* Área principal */}
-              <main className="main-content">
-                <header className="header">
-                  <div className="logo-title">
-                    <img src={logoPrincipal} alt="Logo Principal" className="logo_principal" />
-                    <h1 className="login-logo">Quest<span>Book</span></h1>
-                  </div>
-                  <div className="header-right">
-                    <p>Assistente Inteligente de Estudos</p>
-                    <button onClick={handleLogout} className="logout-btn">Sair</button>
-                  </div>
-                </header>
+                {/* Área principal */}
+                <main className="main-content">
+                  <header className="header">
+                    <div className="logo-title">
+                      <img src={logoPrincipal} alt="Logo Principal" className="logo_principal" />
+                      <h1 className="login-logo">Quest<span>Book</span></h1>
+                    </div>
+                    <div className="header-right">
+                      <p>Assistente Inteligente de Estudos</p>
+                      <button onClick={handleLogout} className="logout-btn">Sair</button>
+                    </div>
+                  </header>
 
-                {/* Upload de PDFs */}
-                <UploadPDF onUploadSuccess={() => console.log("Upload concluído")} />
+                  {/* Upload de PDFs */}
+                  <UploadPDF onUploadSuccess={() => console.log("Upload concluído")} />
 
-                {/* Chat para gerar questões */}
-                <ChatQuestions onNewQuestions={handleNewQuestions} />
+                  {/* Chat para gerar questões */}
+                  <ChatQuestions onNewQuestions={handleNewQuestions} />
 
-                {/* Lista de questões geradas */}
-                <QuestionList chatResponse={chatResponse} />
-              </main>
-            </div>
+                  {/* Lista de questões geradas */}
+                  <QuestionList chatResponse={chatResponse} />
+                </main>
+              </div>
             )
           }
         />
