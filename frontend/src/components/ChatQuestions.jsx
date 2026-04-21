@@ -14,6 +14,7 @@ export default function ChatQuestions({ onNewQuestions }) {
   const textareaRef = useRef(null);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const autoResize = () => {
     const textarea = textareaRef.current;
@@ -91,6 +92,21 @@ export default function ChatQuestions({ onNewQuestions }) {
     setIsMenuOpen(false);
   };
 
+  const handleFileUploadClick = () => {
+    setIsMenuOpen(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      console.log("Arquivos selecionados:", files);
+    }
+    event.target.value = "";
+  };
+
   const isButtonVisible = chatMessage.trim().length > 0 || loading;
 
   return (
@@ -121,7 +137,7 @@ export default function ChatQuestions({ onNewQuestions }) {
         >
           <button
             className="action-menu-item"
-            onClick={handleMenuOptionClick}
+            onClick={handleFileUploadClick}
           >
             <svg
               viewBox="0 0 24 24"
@@ -171,6 +187,14 @@ export default function ChatQuestions({ onNewQuestions }) {
           rows={1}
           disabled={loading}
           aria-label="Mensagem para a IA"
+        />
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden-file-input"
+          onChange={handleFileChange}
+          multiple
         />
 
         <button
