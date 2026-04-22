@@ -160,7 +160,7 @@ button:hover {
 .questions-list,
 .question-card {
   white-space: pre-wrap;
-  background: #0d0e10;
+  background: transparent;
   padding: 18px;
   border-radius: 10px;
   border: none;
@@ -174,7 +174,7 @@ button:hover {
 }
 
 .question-card {
-  margin-bottom: 10px;
+  margin-bottom: 40px;
 }
 
 .q-header {
