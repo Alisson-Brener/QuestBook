@@ -278,6 +278,83 @@ button:hover {
   animation: fadeIn 1s cubic-bezier(0.165, 0.84, 0.44, 1);
   transition: opacity 0.6s ease, transform 0.6s ease;
   z-index: 1;
+  position: relative;
+  overflow: visible;
+}
+
+/* Container de Ondas/Blobs (Estilo Google AI) */
+.hero-waves {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 140%;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(60px); /* Blur reduzido para mais nitidez no movimento */
+  opacity: 0.9;
+  transition: opacity 1.2s ease;
+}
+
+.wave {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  animation: waveMovement 12s infinite alternate ease-in-out; /* Velocidade aumentada */
+}
+
+.wave-1 {
+  width: 650px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(107, 92, 255, 0.8) 0%, transparent 70%);
+  top: -15%;
+  left: -15%;
+  animation-duration: 8s;
+}
+
+.wave-2 {
+  width: 750px;
+  height: 650px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.8) 0%, transparent 70%);
+  bottom: -20%;
+  right: -10%;
+  animation-delay: -2s;
+  animation-duration: 10s;
+}
+
+.wave-3 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.8) 0%, transparent 70%);
+  top: 15%;
+  left: 15%;
+  animation-delay: -1s;
+  animation-duration: 12s;
+}
+
+@keyframes waveMovement {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
+  25% {
+    transform: translate(15%, 10%) rotate(90deg) scale(1.2);
+    border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%;
+  }
+  50% {
+    transform: translate(-5%, 20%) rotate(180deg) scale(0.9);
+    border-radius: 67% 33% 47% 53% / 37% 20% 80% 63%;
+  }
+  75% {
+    transform: translate(-20%, -10%) rotate(270deg) scale(1.1);
+    border-radius: 34% 66% 56% 44% / 44% 54% 46% 56%;
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg) scale(1);
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
 }
 
 .hero-container.fade-out {
@@ -286,16 +363,15 @@ button:hover {
   pointer-events: none;
 }
 
+.hero-container.fade-out::before {
+  opacity: 0;
+}
+
 .hero-title {
   font-size: 5rem;
   font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #6b5cff 0%, #a78bfa 50%, #6b5cff 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
+  color: #fff;
   letter-spacing: -0.03em;
   text-align: left;
   width: 100%;

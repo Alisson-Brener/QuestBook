@@ -77,11 +77,27 @@ function App() {
 
   const [chatResponse, setChatResponse] = useState(null);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
   // Salva histórico sempre que mudar
   useEffect(() => {
     localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
   }, [chatHistory]);
+
+  // Efeito para rastrear o mouse na Hero Section
+  useEffect(() => {
+    if (chatResponse) return;
+
+    const handleMouseMove = (e) => {
+      // Calcula a porcentagem da posição do mouse em relação à janela
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [chatResponse]);
 
   // Adiciona nova pergunta e resultado da IA ao histórico
   const handleNewQuestions = (newData) => {
@@ -186,7 +202,20 @@ function App() {
                   <div className="content-scroll-area">
                     {/* Tela de Boas-vindas (Hero State) */}
                     {!chatResponse && (
-                      <div className={`hero-container ${isInteracting ? "fade-out" : ""}`}>
+                      <div 
+                        className={`hero-container ${isInteracting ? "fade-out" : ""}`}
+                        style={{ 
+                          "--mouse-x": `${mousePos.x}%`, 
+                          "--mouse-y": `${mousePos.y}%` 
+                        }}
+                      >
+                        {/* Efeito de Ondas/Blobs (Estilo Google AI) */}
+                        <div className="hero-waves">
+                          <div className="wave wave-1" style={{ transform: `translate(${(mousePos.x - 50) * 0.2}px, ${(mousePos.y - 50) * 0.2}px)` }}></div>
+                          <div className="wave wave-2" style={{ transform: `translate(${(mousePos.x - 50) * -0.3}px, ${(mousePos.y - 50) * -0.3}px)` }}></div>
+                          <div className="wave wave-3" style={{ transform: `translate(${(mousePos.x - 50) * 0.15}px, ${(mousePos.y - 50) * 0.15}px)` }}></div>
+                        </div>
+
                         <h1 className="hero-title">
                           Olá, {(localStorage.getItem("userEmail") || "Estudante").split("@")[0].split(".")[0].charAt(0).toUpperCase() + (localStorage.getItem("userEmail") || "estudante").split("@")[0].split(".")[0].slice(1)}.
                         </h1>
