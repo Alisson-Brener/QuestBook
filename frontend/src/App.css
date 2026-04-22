@@ -552,14 +552,16 @@ button:hover {
 /* ======== CHAT INPUT DYNAMO (Premium Morphing) ======== */
 .chat-input-container {
   position: fixed;
-  bottom: 40px;
-  left: 270px;
-  right: 20px;
+  bottom: 0;
+  left: 250px;
+  right: 0;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  background: linear-gradient(to bottom, rgba(14, 15, 17, 0) 0%, #0e0f11 25%, #0e0f11 100%);
   display: flex;
   justify-content: center;
   z-index: 1000;
-  pointer-events: none;
-  /* Permite clicar atrás se necessário, mas o wrapper terá pointer-events auto */
+  pointer-events: auto;
 }
 
 .chat-input-wrapper {
@@ -569,27 +571,18 @@ button:hover {
   flex-direction: column;
   max-width: 720px;
   width: 100%;
-  background: rgba(26, 27, 31, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(107, 92, 255, 0.2);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(107, 92, 255, 0.05);
-
-  /* Estado Inicial (Pill-shaped) */
+  background: #1a1b1f;
+  border: none;
+  box-shadow: none;
   border-radius: 40px;
   padding: 6px 56px 6px 52px;
-  /* Espaço para o botão + à esquerda e send à direita */
-
   transition: border-radius 0.4s cubic-bezier(0.165, 0.84, 0.44, 1),
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
     height 0.3s ease;
 }
 
 .chat-input-wrapper:focus-within {
-  border-color: rgba(107, 92, 255, 0.5);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(107, 92, 255, 0.15);
+  border: none;
+  box-shadow: none;
 }
 
 /* Estado Expandido (Rounded Rectangle) */

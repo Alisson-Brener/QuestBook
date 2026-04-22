@@ -183,11 +183,13 @@ function App() {
                     </div>
                   </header>
 
-                  {/* Chat para gerar questões */}
-                  <ChatQuestions onNewQuestions={handleNewQuestions} />
-
                   {/* Lista de questões geradas */}
                   <QuestionList chatResponse={chatResponse} />
+
+                  {/* Chat para gerar questões */}
+                  <div style={{ marginTop: "auto", paddingBottom: "20px" }}>
+                    <ChatQuestions onNewQuestions={handleNewQuestions} />
+                  </div>
                 </main>
               </div>
             )
