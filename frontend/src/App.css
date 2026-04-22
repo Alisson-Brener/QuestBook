@@ -905,7 +905,7 @@ button:hover {
   padding: 0;
   border-radius: 50%;
   background: rgba(107, 92, 255, 0.1);
-  border: 1px solid rgba(107, 92, 255, 0.2);
+  border: none;
   color: rgba(255, 255, 255, 0.6);
   display: flex;
   align-items: center;
@@ -926,7 +926,6 @@ button:hover {
 .action-menu-button:hover {
   background: rgba(107, 92, 255, 0.2);
   color: #fff;
-  border-color: rgba(107, 92, 255, 0.4);
   transform: translateY(-50%) scale(1.05);
   /* Preserva a centralização e adiciona um leve zoom */
 }
@@ -967,10 +966,8 @@ button:hover {
   min-width: 210px;
   background: rgba(22, 23, 27, 0.98);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(107, 92, 255, 0.3);
   border-radius: 14px;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7),
-    0 0 25px rgba(107, 92, 255, 0.1);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
   padding: 2px 8px 8px 8px;
   z-index: 100;
 
@@ -1009,7 +1006,7 @@ button:hover {
   padding: 10px 14px;
   background: transparent;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: rgba(255, 255, 255, 0.85);
   font-size: 0.92rem;
   font-weight: 500;
@@ -1046,7 +1043,7 @@ button:hover {
   align-items: center;
   padding: 10px 32px 10px 12px;
   background: rgba(107, 92, 255, 0.1);
-  border: 1px solid rgba(107, 92, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin: 4px 0;
   max-width: fit-content;
@@ -1080,7 +1077,7 @@ button:hover {
   height: 20px;
   padding: 0;
   background: rgba(30, 31, 38, 0.95);
-  border: 1px solid rgba(107, 92, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
