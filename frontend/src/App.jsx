@@ -165,7 +165,7 @@ function App() {
             !isAuthenticated ? (
               <Navigate to="/login" />
             ) : (
-              <StudentDashboard />
+              <StudentDashboard onLogout={handleLogout} />
             )
           }
         />
@@ -185,7 +185,7 @@ function App() {
             ) : (
               <div className="app-container">
                 {/* Sidebar com histórico */}
-                <Sidebar history={chatHistory} onSelectChat={handleSelectChat} />
+                <Sidebar history={chatHistory} onSelectChat={handleSelectChat} onLogout={handleLogout} />
 
                 {/* Área principal */}
                 <main className="main-content">

@@ -9,7 +9,7 @@ import {
 import { Activity, CheckCircle, XCircle, BarChart3, TrendingUp } from "lucide-react";
 import "./StudentDashboard.css";
 
-const StudentDashboard = () => {
+const StudentDashboard = ({ onLogout }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="student-dashboard-container">
-      <Sidebar history={[]} onSelectChat={() => {}} />
+      <Sidebar history={[]} onSelectChat={() => {}} onLogout={onLogout} />
       
       <main className="student-dashboard-content">
         <header className="student-dashboard-header">

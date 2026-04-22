@@ -44,31 +44,35 @@ class IntentParser:
         CONTEXTO ATUAL (USE ISTO PARA RESOLVER AMBIGUIDADES):
         {context_str}
 
-        Sua tarefa: Identificar Tópico, Banca e Quantidade.
+        Sua tarefa: Identificar Tópico, Banca, Quantidade e gerar uma Query de Busca.
         Saída obrigatória: JSON estrito.
         
         REGRAS DE MEMÓRIA:
         1. Se o usuário disser "mais 5" ou "agora da FGV", use o Tópico do histórico.
         2. Se o usuário mudar de assunto (ex: "agora fale de Java"), ignore o tópico do histórico.
 
+        REGRAS PARA A QUERY DE BUSCA (search_query):
+        1. Crie uma frase semanticamente rica para usar em um banco de dados vetorial. 
+        2. Use palavras completas que descrevam o tema técnico ou da matéria. Por exemplo, se o usuário pedir "questões de java difíceis", a search_query ideal é "questões difíceis sobre a linguagem de programação Java, abrangendo tópicos avançados".
+
         REGRAS DE SEGURANÇA (IMPORTANTE):
         1. O sistema é APENAS para questões de concursos/estudos.
         2. Se o usuário perguntar sobre culinária, piadas, futebol, ou falar abobrinha, retorne "topic": "INVALIDO".
 
         EXEMPLOS:
-        Input: "questoes de java" -> Output: {{"topic": "Java", "limit": 5}}
+        Input: "questoes de java" -> Output: {{"topic": "Java", "limit": 5, "search_query": "questões de concurso sobre a linguagem de programação Java"}}
         Input: "receita de miojo" -> Output: {{"topic": "INVALIDO"}}
         Input: "quem ganhou o jogo ontem" -> Output: {{"topic": "INVALIDO"}}
 
         EXEMPLOS (FEW-SHOT LEARNING):
         Input: "questoes de engenharia de software"
-        Output: {{"topic": "Engenharia de Software", "limit": 5}}
+        Output: {{"topic": "Engenharia de Software", "limit": 5, "search_query": "questões de prova sobre processos, metodologias e conceitos de engenharia de software"}}
 
         Input: "quero 10 da banca cespe"
-        Output: {{"topic": "Geral", "banca": "CESPE", "limit": 10}}
+        Output: {{"topic": "Geral", "banca": "CESPE", "limit": 10, "search_query": "questões de múltipla escolha para concursos públicos da banca CESPE"}}
 
         Input: "mais 5 difíceis" (Considerando que o histórico era sobre Java)
-        Output: {{"topic": "Java", "difficulty": "Difícil", "limit": 5}}
+        Output: {{"topic": "Java", "difficulty": "Difícil", "limit": 5, "search_query": "questões de nível de dificuldade alto sobre programação Java avançada"}}
         """
 
         messages = [
