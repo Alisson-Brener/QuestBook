@@ -163,10 +163,14 @@ button:hover {
   background: #0d0e10;
   padding: 18px;
   border-radius: 10px;
-  border: 1px solid #333;
+  border: none;
+  border-bottom: 1px solid #333;
   font-size: 0.95rem;
   line-height: 1.5rem;
   margin-top: 10px;
+  max-width: 720px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .question-card {
@@ -186,6 +190,11 @@ button:hover {
 }
 
 /* ======== RESULTADOS ======== */
+.results-area {
+  max-width: 720px;
+  width: 100%;
+}
+
 .results-area h3 {
   margin-bottom: 10px;
 }

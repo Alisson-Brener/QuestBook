@@ -118,7 +118,6 @@ export default function QuestionList({ chatResponse }) {
                           cursor: "pointer",
                           transition: "0.2s",
                           backgroundColor: background,
-                          border: "1px solid #333",
                         }}
                       >
                         <strong>{letra}) </strong>
