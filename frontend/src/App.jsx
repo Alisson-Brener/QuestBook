@@ -76,6 +76,7 @@ function App() {
   });
 
   const [chatResponse, setChatResponse] = useState(null);
+  const [isInteracting, setIsInteracting] = useState(false);
 
   // Salva histórico sempre que mudar
   useEffect(() => {
@@ -182,13 +183,27 @@ function App() {
                       <button onClick={handleLogout} className="logout-btn">Sair</button>
                     </div>
                   </header>
+                  <div className="content-scroll-area">
+                    {/* Tela de Boas-vindas (Hero State) */}
+                    {!chatResponse && (
+                      <div className={`hero-container ${isInteracting ? "fade-out" : ""}`}>
+                        <h1 className="hero-title">
+                          Olá, {(localStorage.getItem("userEmail") || "Estudante").split("@")[0].split(".")[0].charAt(0).toUpperCase() + (localStorage.getItem("userEmail") || "estudante").split("@")[0].split(".")[0].slice(1)}.
+                        </h1>
+                        <h2 className="hero-subtitle">Por onde começamos hoje?</h2>
+                      </div>
+                    )}
 
-                  {/* Lista de questões geradas */}
-                  <QuestionList chatResponse={chatResponse} />
+                    {/* Lista de questões geradas */}
+                    <QuestionList chatResponse={chatResponse} />
+                  </div>
 
                   {/* Chat para gerar questões */}
-                  <div style={{ marginTop: "auto", paddingBottom: "20px" }}>
-                    <ChatQuestions onNewQuestions={handleNewQuestions} />
+                  <div className="chat-input-container">
+                    <ChatQuestions 
+                      onNewQuestions={handleNewQuestions} 
+                      onInteraction={() => setIsInteracting(true)}
+                    />
                   </div>
                 </main>
               </div>

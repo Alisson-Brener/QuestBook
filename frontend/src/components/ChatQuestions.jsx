@@ -5,7 +5,7 @@ import axios from "axios";
 const MAX_TEXTAREA_HEIGHT = 200;
 const EXPANDED_HEIGHT_THRESHOLD = 44;
 
-export default function ChatQuestions({ onNewQuestions }) {
+export default function ChatQuestions({ onNewQuestions, onInteraction }) {
   const [chatMessage, setChatMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -50,6 +50,7 @@ export default function ChatQuestions({ onNewQuestions }) {
 
   const handleSend = async () => {
     if (!chatMessage.trim() || loading) return;
+    if (onInteraction) onInteraction();
 
     setLoading(true);
     try {
@@ -114,6 +115,7 @@ export default function ChatQuestions({ onNewQuestions }) {
 
   const handleSendPdf = async () => {
     if (!selectedFile || loading) return;
+    if (onInteraction) onInteraction();
 
     setLoading(true);
     try {
