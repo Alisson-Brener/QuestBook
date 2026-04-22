@@ -30,7 +30,7 @@ class IntentParser:
         self.memory[session_id].append(user_text)
 
     # Mantendo sua técnica vencedora (Few-Shot) mas com Contexto Injetado
-    def parse_user_prompt(self, user_text: str, session_id: str = None):
+    def parse_user_prompt(self, user_text: str, session_id: str = None, document_context: str = None):
         
         # 1. Recupera Contexto
         context_str = self._get_context(session_id)
@@ -38,12 +38,14 @@ class IntentParser:
         # 2. Salva a mensagem atual (para a próxima vez)
         self._save_context(session_id, user_text)
 
+        doc_info = f"\nO USUÁRIO FEZ UPLOAD DE UM DOCUMENTO COM O SEGUINTE CONTEXTO (USE-O SE ELE MENCIONAR 'DOCUMENTO' OU 'CAPÍTULO'):\n{document_context}\n" if document_context else ""
+
         sys_prompt = f"""
         Você é um Especialista em Extração de Intenções para Concursos.
         
-        CONTEXTO ATUAL (USE ISTO PARA RESOLVER AMBIGUIDADES):
+        CONTEXTO ATUAL DA CONVERSA:
         {context_str}
-
+        {doc_info}
         Sua tarefa: Identificar Tópico, Banca, Quantidade e gerar uma Query de Busca.
         Saída obrigatória: JSON estrito.
         

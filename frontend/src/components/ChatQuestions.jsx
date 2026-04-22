@@ -11,6 +11,7 @@ export default function ChatQuestions({ onNewQuestions, onInteraction }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadedDocumentId, setUploadedDocumentId] = useState(null);
   const textareaRef = useRef(null);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -56,9 +57,14 @@ export default function ChatQuestions({ onNewQuestions, onInteraction }) {
     try {
       const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
 
-      const res = await axios.post(`${apiUrl}/chat_questions`, {
+      const requestBody = {
         user_message: chatMessage,
-      });
+      };
+      if (uploadedDocumentId) {
+        requestBody.document_id = uploadedDocumentId;
+      }
+
+      const res = await axios.post(`${apiUrl}/chat_questions`, requestBody);
 
       onNewQuestions({
         chatMessage,
@@ -126,6 +132,10 @@ export default function ChatQuestions({ onNewQuestions, onInteraction }) {
       const res = await axios.post(`${apiUrl}/upload_document`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
+      if (res.data.document_id) {
+        setUploadedDocumentId(res.data.document_id);
+      }
 
       onNewQuestions({
         chatMessage: `📄 Upload: ${selectedFile.name}`,
