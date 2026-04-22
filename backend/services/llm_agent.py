@@ -53,6 +53,11 @@ class IntentParser:
         1. Se o usuário disser "mais 5" ou "agora da FGV", use o Tópico do histórico.
         2. Se o usuário mudar de assunto (ex: "agora fale de Java"), ignore o tópico do histórico.
 
+        REGRAS PARA USO DO DOCUMENTO:
+        1. Se o usuário pedir questões de um "capítulo", "seção" ou "página", VOCÊ DEVE OBRIGATORIAMENTE LER O CONTEXTO DO DOCUMENTO ACIMA para descobrir do que se trata.
+        2. EXTRAIA OS ASSUNTOS REAIS. Por exemplo, se o contexto diz que o Capítulo 2 é sobre "Processos de Software e Scrum", o campo `topic` deve ser "Processos de Software, Scrum".
+        3. NUNCA coloque "capítulo 2" ou "seção 3" na sua `search_query`! O banco de dados vetorial NÃO SABE o que é capítulo 2. Coloque os ASSUNTOS (ex: "questões de concurso sobre processos de software, scrum, kanban").
+
         REGRAS PARA A QUERY DE BUSCA (search_query):
         1. Crie uma frase semanticamente rica para usar em um banco de dados vetorial. 
         2. Use palavras completas que descrevam o tema técnico ou da matéria. Por exemplo, se o usuário pedir "questões de java difíceis", a search_query ideal é "questões difíceis sobre a linguagem de programação Java, abrangendo tópicos avançados".

@@ -120,8 +120,23 @@ async def chat_with_questbook(
     if request.document_id:
         chapter = db_app.query(Chapter).filter(Chapter.document_id == request.document_id).first()
         if chapter and chapter.text_content:
-            # Pegamos os primeiros 4000 caracteres (geralmente contém sumário, introdução) para o LLM entender do que se trata o documento
-            doc_context = chapter.text_content[:4000]
+            text = chapter.text_content
+            # Busca Heurística: Tentar encontrar a parte exata do PDF que o usuário quer!
+            import re
+            # Procura coisas como "capitulo 2", "seção 3", "unidade 4", etc.
+            match = re.search(r'(cap[íi]tulo|se[çc][ãa]o|unidade|p[áa]gina)\s+(\d+|[ivxlc]+)', request.user_message.lower())
+            
+            start_idx = 0
+            if match:
+                search_term = match.group(0) # ex: "capitulo 2"
+                idx = text.lower().find(search_term)
+                if idx != -1:
+                    # Achou o termo no meio do livro! Vamos pegar uma janela ao redor dele.
+                    # Pega um pouco antes (caso o termo esteja no título) e bastante depois.
+                    start_idx = max(0, idx - 1000)
+            
+            # Pega 20.000 caracteres a partir do ponto encontrado (ou do começo, se não achar)
+            doc_context = text[start_idx : start_idx + 20000]
 
     # 1. IA define a intenção, agora podendo ler um trecho do PDF
     parsed_intent = intent_parser.parse_user_prompt(
@@ -187,27 +202,28 @@ async def chat_with_questbook(
             "metadados": {"tipo": "AVISO_SISTEMA"}
         }]
 
-    melhor_score = unique_results[0]['confidence']
-    # Threshold de 0.4 representa 40% de match absoluto matemático, que é um bom corte para L2 normalizado
-    if melhor_score < 0.4:
-        print(f"⚠️ Resultados encontrados, mas confiança baixa ({melhor_score}). Descartando.")
-        return [{
-            "id": -1,
-            "enunciado": f"Encontrei alguns resultados, mas eles parecem pouco relevantes para a busca. Tente ser mais específico.",
-            "alternativas": {},
-            "gabarito": "N/A",
-            "confidence": melhor_score,
-            "metadados": {"tipo": "AVISO_SISTEMA"}
-        }]
-
     # 3. Hidratação via ORM (Recuperando de todos os candidatos sem limitar prematuramente)
     ids_encontrados = []
     for r in unique_results:
+        # AQUI ESTÁ O NOVO COMPORTAMENTO: Filtramos CADA questão pela trava de confiança
+        if r['confidence'] < 0.4:
+            continue
+            
         try:
             ids_encontrados.append(int(r['external_id']))
         except:
             continue
     
+    if not ids_encontrados:
+        return [{
+            "id": -1,
+            "enunciado": "As questões que encontrei sobre esse tema não tinham qualidade/correlação suficiente. Tente pesquisar usando outros termos.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 0.0,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
+
     # Busca GERAL no MySQL usando a classe QuestaoLegada
     questoes_mysql = db_questoes.query(QuestaoLegada).filter(
         QuestaoLegada.id.in_(ids_encontrados)
@@ -227,8 +243,11 @@ async def chat_with_questbook(
             
         # Verifica se o ID vetorial ainda existe no Banco Relacional
         if q_id in mapa_mysql:
-            q_sql = mapa_mysql[q_id]
             score = vetor_result['confidence']
+            if score < 0.4:
+                continue # Pula se a confiança for muito baixa
+                
+            q_sql = mapa_mysql[q_id]
             
             response_data.append({
                 "id": q_sql.id,
@@ -248,7 +267,7 @@ async def chat_with_questbook(
                 }
             })
             
-            # Garante que atendeu EXATAMENTE à cota exigida, driblando 'buracos' de DB
+            # Garante que não passe da cota exigida
             if len(response_data) >= qtd_questoes:
                 break
         
