@@ -179,7 +179,7 @@ function App() {
                       <h1 className="login-logo">Quest<span>Book</span></h1>
                     </div>
                     <div className="header-right">
-                      <p>Assistente Inteligente de Estudos</p>
+                      <p style={{ color: "rgba(255, 255, 255, 0.6)" }}>Assistente Inteligente de Estudos</p>
                       <button onClick={handleLogout} className="logout-btn">Sair</button>
                     </div>
                   </header>
@@ -190,7 +190,7 @@ function App() {
                         <h1 className="hero-title">
                           Olá, {(localStorage.getItem("userEmail") || "Estudante").split("@")[0].split(".")[0].charAt(0).toUpperCase() + (localStorage.getItem("userEmail") || "estudante").split("@")[0].split(".")[0].slice(1)}.
                         </h1>
-                        <h2 className="hero-subtitle">Por onde começamos hoje?</h2>
+                        <h2 className="hero-subtitle">Qual conhecimento vamos dominar hoje?</h2>
                       </div>
                     )}
 
@@ -200,8 +200,8 @@ function App() {
 
                   {/* Chat para gerar questões */}
                   <div className="chat-input-container">
-                    <ChatQuestions 
-                      onNewQuestions={handleNewQuestions} 
+                    <ChatQuestions
+                      onNewQuestions={handleNewQuestions}
                       onInteraction={() => setIsInteracting(true)}
                     />
                   </div>
