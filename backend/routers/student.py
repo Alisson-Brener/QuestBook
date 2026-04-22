@@ -84,65 +84,23 @@ async def upload_document(
     db.commit()
     db.refresh(db_chapter)
 
-    # 4. Chamar a IA para Sugestões
-    questions_found = 0
-    if ai_engine:
-        print("🧠 Chamando IA para buscar sugestões iniciais (c/ chunking)...")
-        
-        # Chunking: divide o texto para não estourar o limite de tokens da IA local
-        chunk_size = 1000
-        overlap = 200
-        chunks = []
-        
-        for i in range(0, len(full_text), chunk_size - overlap):
-            chunk = full_text[i:i + chunk_size]
-            if len(chunk) > 100:
-                chunks.append(chunk)
-                
-        if not chunks:
-            chunks.append(full_text)
-            
-        print(f"📊 PDF dividido em {len(chunks)} fragmentos para melhor análise semântica.")
-        
-        all_results = []
-        seen_ids = set()
-        
-        # Processa cada fragmento e agrega resultados
-        for chunk in chunks:
-            try:
-                chunk_results = ai_engine.search_relevant_questions(chunk, limit=3)
-                for res in chunk_results:
-                    if res['external_id'] not in seen_ids:
-                        seen_ids.add(res['external_id'])
-                        all_results.append(res)
-            except Exception as e:
-                print(f"⚠️ Erro ao processar fragmento: {e}")
-                
-        # Classifica todo o ecossistema coletado para eleger as mais correlacionadas
-        all_results.sort(key=lambda x: x['confidence'], reverse=True)
-        best_results = all_results[:10]
-        
-        for res in best_results:
-            status = "APROVADO_IA" if res['confidence'] > 0.7 else "PENDENTE"
-            
-            db_suggestion = SuggestedQuestion(
-                chapter_id=db_chapter.id,
-                external_question_id=res['external_id'],
-                confidence_score=res['confidence'],
-                status=status
-            )
-            db.add(db_suggestion)
-            questions_found += 1
-        
-        db.commit()
+    # 4. A IA para sugestões automáticas foi removida daqui a pedido do usuário
+    # para que o upload seja rápido e o usuário possa escolher o que quer via chat.
 
     return {
         "filename": file.filename,
         "document_id": db_document.id,
         "chapter_id": db_chapter.id,
-        "questions_found": questions_found,
-        "results": results if ai_engine else [], 
-        "detail": "Upload e processamento concluídos com sucesso!"
+        "questions_found": 0,
+        "results": [{
+            "id": -1,
+            "enunciado": f"O documento '{file.filename}' foi lido e salvo com sucesso! Agora você pode me pedir questões sobre os assuntos abordados nele (ex: 'Me dê questões sobre o tópico X').",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 1.0,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }], 
+        "detail": "Upload concluído com sucesso!"
     }
 
 # --- ROTA 2: CHAT (Lógica Restaurada) ---
@@ -157,8 +115,35 @@ async def chat_with_questbook(
     if not ai_engine or not intent_parser:
         raise HTTPException(status_code=503, detail="IA ainda está carregando...")
 
-    # 1. IA define a intenção
-    parsed_intent = intent_parser.parse_user_prompt(request.user_message, session_id=request.session_id)
+    # Recupera contexto do documento se fornecido
+    doc_context = None
+    if request.document_id:
+        chapter = db_app.query(Chapter).filter(Chapter.document_id == request.document_id).first()
+        if chapter and chapter.text_content:
+            text = chapter.text_content
+            # Busca Heurística: Tentar encontrar a parte exata do PDF que o usuário quer!
+            import re
+            # Procura coisas como "capitulo 2", "seção 3", "unidade 4", etc.
+            match = re.search(r'(cap[íi]tulo|se[çc][ãa]o|unidade|p[áa]gina)\s+(\d+|[ivxlc]+)', request.user_message.lower())
+            
+            start_idx = 0
+            if match:
+                search_term = match.group(0) # ex: "capitulo 2"
+                idx = text.lower().find(search_term)
+                if idx != -1:
+                    # Achou o termo no meio do livro! Vamos pegar uma janela ao redor dele.
+                    # Pega um pouco antes (caso o termo esteja no título) e bastante depois.
+                    start_idx = max(0, idx - 1000)
+            
+            # Pega 20.000 caracteres a partir do ponto encontrado (ou do começo, se não achar)
+            doc_context = text[start_idx : start_idx + 20000]
+
+    # 1. IA define a intenção, agora podendo ler um trecho do PDF
+    parsed_intent = intent_parser.parse_user_prompt(
+        request.user_message, 
+        session_id=request.session_id, 
+        document_context=doc_context
+    )
     topic = parsed_intent.get("topic", "Geral")
 
     if topic == "INVALIDO":
@@ -217,27 +202,28 @@ async def chat_with_questbook(
             "metadados": {"tipo": "AVISO_SISTEMA"}
         }]
 
-    melhor_score = unique_results[0]['confidence']
-    # Threshold de 0.4 representa 40% de match absoluto matemático, que é um bom corte para L2 normalizado
-    if melhor_score < 0.4:
-        print(f"⚠️ Resultados encontrados, mas confiança baixa ({melhor_score}). Descartando.")
-        return [{
-            "id": -1,
-            "enunciado": f"Encontrei alguns resultados, mas eles parecem pouco relevantes para a busca. Tente ser mais específico.",
-            "alternativas": {},
-            "gabarito": "N/A",
-            "confidence": melhor_score,
-            "metadados": {"tipo": "AVISO_SISTEMA"}
-        }]
-
     # 3. Hidratação via ORM (Recuperando de todos os candidatos sem limitar prematuramente)
     ids_encontrados = []
     for r in unique_results:
+        # AQUI ESTÁ O NOVO COMPORTAMENTO: Filtramos CADA questão pela trava de confiança
+        if r['confidence'] < 0.4:
+            continue
+            
         try:
             ids_encontrados.append(int(r['external_id']))
         except:
             continue
     
+    if not ids_encontrados:
+        return [{
+            "id": -1,
+            "enunciado": "As questões que encontrei sobre esse tema não tinham qualidade/correlação suficiente. Tente pesquisar usando outros termos.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 0.0,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
+
     # Busca GERAL no MySQL usando a classe QuestaoLegada
     questoes_mysql = db_questoes.query(QuestaoLegada).filter(
         QuestaoLegada.id.in_(ids_encontrados)
@@ -257,8 +243,11 @@ async def chat_with_questbook(
             
         # Verifica se o ID vetorial ainda existe no Banco Relacional
         if q_id in mapa_mysql:
-            q_sql = mapa_mysql[q_id]
             score = vetor_result['confidence']
+            if score < 0.4:
+                continue # Pula se a confiança for muito baixa
+                
+            q_sql = mapa_mysql[q_id]
             
             response_data.append({
                 "id": q_sql.id,
@@ -278,7 +267,7 @@ async def chat_with_questbook(
                 }
             })
             
-            # Garante que atendeu EXATAMENTE à cota exigida, driblando 'buracos' de DB
+            # Garante que não passe da cota exigida
             if len(response_data) >= qtd_questoes:
                 break
         
