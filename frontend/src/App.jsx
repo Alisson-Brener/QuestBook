@@ -183,9 +183,6 @@ function App() {
                     </div>
                   </header>
 
-                  {/* Upload de PDFs */}
-                  <UploadPDF onUploadSuccess={() => console.log("Upload concluído")} />
-
                   {/* Chat para gerar questões */}
                   <ChatQuestions onNewQuestions={handleNewQuestions} />
 
