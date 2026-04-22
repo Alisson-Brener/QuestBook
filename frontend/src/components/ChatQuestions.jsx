@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
-// Variáveis de configuração (Evitando "Magic Numbers")
 const MAX_TEXTAREA_HEIGHT = 200;
 const EXPANDED_HEIGHT_THRESHOLD = 44;
 
@@ -11,6 +10,7 @@ export default function ChatQuestions({ onNewQuestions }) {
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const textareaRef = useRef(null);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -102,12 +102,47 @@ export default function ChatQuestions({ onNewQuestions }) {
   const handleFileChange = (event) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      console.log("Arquivos selecionados:", files);
+      setSelectedFile(files[0]);
+      setIsExpanded(true);
     }
     event.target.value = "";
   };
 
-  const isButtonVisible = chatMessage.trim().length > 0 || loading;
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+  };
+
+  const handleSendPdf = async () => {
+    if (!selectedFile || loading) return;
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
+      const res = await axios.post(`${apiUrl}/upload_document`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      onNewQuestions({
+        chatMessage: `📄 Upload: ${selectedFile.name}`,
+        results: res.data.results || [],
+        ai_understanding: null,
+      });
+
+      setSelectedFile(null);
+      setChatMessage("");
+      setIsExpanded(false);
+    } catch (err) {
+      console.error("Erro ao enviar PDF:", err);
+      alert("Erro ao enviar PDF. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isButtonVisible = chatMessage.trim().length > 0 || loading || selectedFile;
 
   return (
     <div className="chat-input-container">
@@ -176,32 +211,70 @@ export default function ChatQuestions({ onNewQuestions }) {
           </button>
         </div>
 
-        <textarea
-          ref={textareaRef}
-          id="chat-input-textarea"
-          className="chat-input"
-          placeholder="Busque questões sobre o tema desejado..."
-          value={chatMessage}
-          onChange={(e) => setChatMessage(e.target.value)}
-          onKeyDown={handleKeyPress}
-          rows={1}
-          disabled={loading}
-          aria-label="Mensagem para a IA"
-        />
+        {selectedFile ? (
+            <div className="file-preview">
+              <div className="file-info">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span className="file-name">{selectedFile.name}</span>
+              </div>
+              <button
+                className="remove-file-btn"
+                onClick={handleRemoveFile}
+                aria-label="Remover arquivo"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <textarea
+              ref={textareaRef}
+              id="chat-input-textarea"
+              className="chat-input"
+              placeholder="Busque questões sobre o tema desejado..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              rows={1}
+              disabled={loading}
+              aria-label="Mensagem para a IA"
+            />
+          )}
 
         <input
           ref={fileInputRef}
           type="file"
           className="hidden-file-input"
           onChange={handleFileChange}
-          multiple
+          accept=".pdf"
         />
 
         <button
           className={`send-button ${isButtonVisible ? "visible" : ""}`}
-          onClick={handleSend}
-          disabled={loading || !chatMessage.trim()}
-          aria-label="Enviar mensagem"
+          onClick={selectedFile ? handleSendPdf : handleSend}
+          disabled={loading || (!chatMessage.trim() && !selectedFile)}
+          aria-label={selectedFile ? "Enviar PDF" : "Enviar mensagem"}
         >
           {loading ? (
             <svg

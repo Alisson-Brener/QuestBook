@@ -815,6 +815,63 @@ button:hover {
   display: none;
 }
 
+/* ======== FILE PREVIEW ======== */
+.file-preview {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 32px 10px 12px;
+  background: rgba(107, 92, 255, 0.1);
+  border: 1px solid rgba(107, 92, 255, 0.2);
+  border-radius: 8px;
+  margin: 4px 0;
+  max-width: fit-content;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.file-info svg {
+  flex-shrink: 0;
+  color: rgba(107, 92, 255, 0.8);
+}
+
+.file-name {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.remove-file-btn {
+  position: absolute;
+  top: -10px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: rgba(30, 31, 38, 0.95);
+  border: 1px solid rgba(107, 92, 255, 0.3);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.remove-file-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
 /* Spinner Styles */
 .spinner {
   animation: spin 0.8s linear infinite;

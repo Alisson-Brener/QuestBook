@@ -109,6 +109,7 @@ async def upload_document(
         "document_id": db_document.id,
         "chapter_id": db_chapter.id,
         "questions_found": questions_found,
+        "results": results if ai_engine else [], 
         "detail": "Upload e processamento concluídos com sucesso!"
     }
 
