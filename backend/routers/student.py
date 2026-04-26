@@ -249,6 +249,10 @@ async def chat_with_questbook(
                 
             q_sql = mapa_mysql[q_id]
             
+            # Pula questões sem gabarito válido (gabarito = "X")
+            if q_sql.gabarito == "X":
+                continue
+            
             response_data.append({
                 "id": q_sql.id,
                 "enunciado": q_sql.enunciado,
