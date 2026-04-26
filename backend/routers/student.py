@@ -253,16 +253,23 @@ async def chat_with_questbook(
             if q_sql.gabarito == "X":
                 continue
             
+            # Cria dicionário de alternativas dinamicamente (apenas com conteúdo válido)
+            alternativas = {}
+            if q_sql.alternativa_a:
+                alternativas["A"] = q_sql.alternativa_a
+            if q_sql.alternativa_b:
+                alternativas["B"] = q_sql.alternativa_b
+            if q_sql.alternativa_c:
+                alternativas["C"] = q_sql.alternativa_c
+            if q_sql.alternativa_d:
+                alternativas["D"] = q_sql.alternativa_d
+            if q_sql.alternativa_e:
+                alternativas["E"] = q_sql.alternativa_e
+            
             response_data.append({
                 "id": q_sql.id,
                 "enunciado": q_sql.enunciado,
-                "alternativas": {
-                    "A": q_sql.alternativa_a,
-                    "B": q_sql.alternativa_b,
-                    "C": q_sql.alternativa_c,
-                    "D": q_sql.alternativa_d,
-                    "E": q_sql.alternativa_e
-                },
+                "alternativas": alternativas,
                 "gabarito": q_sql.gabarito,
                 "confidence": score,
                 "metadados": {
