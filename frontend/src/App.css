@@ -15,7 +15,7 @@
 .sidebar {
   width: 250px;
   background: #141519;
-  border-radius: 14px;
+  border-radius: 0;
   box-shadow: none;
   overflow: visible;
   flex-shrink: 0;
