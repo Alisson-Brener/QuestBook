@@ -36,6 +36,15 @@
   color: #fff;
 }
 
+.sidebar h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
 .sidebar ul {
   list-style: none;
   padding: 0;
@@ -43,15 +52,17 @@
 
 .sidebar li {
   cursor: pointer;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
   transition: 0.2s;
-  margin-bottom: 6px;
-  color: #e6e6e6;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
 }
 
 .sidebar li:hover {
-  background: rgba(107, 92, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 
