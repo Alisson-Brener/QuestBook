@@ -1,8 +1,6 @@
 // src/components/QuestionList.jsx
 import { useState } from "react"
 import axios from "axios"
-import { generateQuestionsPDF } from "../utils/pdfGenerator.js"
-
 export default function QuestionList({ chatResponse }) {
   const [selectedAnswers, setSelectedAnswers] = useState({})
   const [submitted, setSubmitted] = useState({})
@@ -45,26 +43,8 @@ export default function QuestionList({ chatResponse }) {
     }
   }
 
-  const handleExportPDF = () => {
-    if (questions && questions.length > 0) {
-      generateQuestionsPDF(questions);
-    }
-  }
-
   return (
     <section className="results-area">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-        <h3>Resultado da IA</h3>
-        {questions && questions.length > 0 && (
-          <button 
-            onClick={handleExportPDF}
-            style={{ marginTop: 0, width: "auto", padding: "8px 16px" }}
-          >
-            Exporta PDF
-          </button>
-        )}
-      </div>
-
       <div className="questions-list">
         {Array.isArray(questions) && questions.length > 0 ? (
           questions.map((q, index) => {

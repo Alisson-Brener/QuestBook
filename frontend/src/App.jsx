@@ -13,6 +13,7 @@ import Sidebar from "./components/Sidebar";
 import UploadPDF from "./components/UploadPDF";
 import ChatQuestions from "./components/ChatQuestions";
 import QuestionList from "./components/QuestionList";
+import { generateQuestionsPDF } from "./utils/pdfGenerator.js";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import RegisterTeacher from "./components/RegisterTeacher";
@@ -118,6 +119,18 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  const handleExportPDF = () => {
+    const questions =
+      chatResponse?.results ||
+      chatResponse?.questions ||
+      chatResponse?.data ||
+      [];
+      
+    if (questions.length > 0) {
+      generateQuestionsPDF(questions);
+    }
+  };
+
   return (
     <Router>
       <Routes>
@@ -195,8 +208,35 @@ function App() {
                       <h1 className="login-logo">Quest<span>Book</span></h1>
                     </div>
                     <div className="header-right">
-                      <p style={{ color: "rgba(255, 255, 255, 0.6)" }}>Assistente Inteligente de Estudos</p>
-                      <button onClick={handleLogout} className="logout-btn">Sair</button>
+                      <p style={{ color: "rgba(255, 255, 255, 0.6)", marginRight: "10px" }}>Assistente Inteligente de Estudos</p>
+                      {chatResponse && (
+                        <button 
+                          onClick={handleExportPDF} 
+                          className="export-pdf-btn-header"
+                          style={{
+                            width: "auto",
+                            padding: "8px 16px",
+                            margin: 0,
+                            borderRadius: "8px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "0.85rem",
+                            background: "linear-gradient(135deg, #6b5cff 0%, #9b3dff 100%)",
+                            border: "none",
+                            color: "white",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          Exportar PDF
+                        </button>
+                      )}
                     </div>
                   </header>
                   <div className="content-scroll-area">

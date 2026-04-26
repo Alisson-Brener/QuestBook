@@ -1122,3 +1122,9 @@ button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
+
+.export-pdf-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(107, 92, 255, 0.4);
+  filter: brightness(1.1);
+}
