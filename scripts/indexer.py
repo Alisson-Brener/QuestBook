@@ -140,13 +140,14 @@ def main():
             batch_metadatas.append({
                 "original_text": question_text,
                 "banca": banca_nome, 
-                "ano": ano_valor
+                "ano": ano_valor,
+                "tamanho": len(question_text)
             })
 
         if not batch_texts:
             continue
 
-        embeddings = model.encode(batch_texts, show_progress_bar=False)
+        embeddings = model.encode(batch_texts, show_progress_bar=False, normalize_embeddings=True)
 
         vector_collection.upsert(
             ids=batch_ids,

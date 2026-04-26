@@ -33,30 +33,32 @@ class QuestSearchEngine:
             """
             Busca questões por similaridade E filtros (ex: só banca FGV).
             """
-            # 1. Gerar vetor
-            query_embedding = self.model.encode([text])
+            # 1. Gerar vetor NORMALIZADO
+            query_embedding = self.model.encode([text], normalize_embeddings=True)
 
-            # 2. ESTRATÉGIA DE SOBRA: Buscar o TRIPLO de candidatos
-            # Como vamos jogar fora questões curtas (<60 chars), precisamos pedir mais ao banco
-            # para garantir que no final sobrem 'limit' questões.
-            candidates_limit = limit * 3 
+            # 2. ESTRATÉGIA DE SOBRA: Pedimos mais resultados ao banco
+            # para ter margem caso precisemos descartar questões duplicadas.
+            candidates_limit = limit * 3
 
-            # 3. PREPARAR FILTRO (WHERE CLAUSE) - Parte Nova
-            where_clause = {}
+            # 3. PREPARAR FILTRO (WHERE CLAUSE)
+            conditions = [{"tamanho": {"$gte": 60}}]
             if filters:
                 if "banca" in filters and filters["banca"]:
-                    where_clause["banca"] = filters["banca"]
+                    conditions.append({"banca": filters["banca"]})
                 
-                # if "ano" in filters: where_clause["ano"] = filters["ano"]
+                # if "ano" in filters: conditions.append({"ano": filters["ano"]})
 
-            final_where = where_clause if len(where_clause) > 0 else None
+            if len(conditions) == 1:
+                final_where = conditions[0]
+            else:
+                final_where = {"$and": conditions}
             
-            # 4. BUSCAR NO BANCO (Com filtro e margem de sobra)
+            # 4. BUSCAR NO BANCO
             results = self.collection.query(
                 query_embeddings=query_embedding,
                 n_results=candidates_limit,
-                where=final_where, # <--- O filtro de banca entra aqui
-                include=["documents", "metadatas", "distances"] 
+                where=final_where,
+                include=["documents", "metadatas", "distances", "embeddings"] 
             )
 
             formatted_results = []
@@ -69,24 +71,50 @@ class QuestSearchEngine:
             distances = results['distances'][0]
             documents = results['documents'][0]
             metadatas = results['metadatas'][0]
+            embeddings = results['embeddings'][0]
             
             import math 
+            import re
+
+            seen_texts = set()
+            accepted_embeddings = []
 
             for i in range(len(ids)):
-                # Se já preenchemos o limite desejado, para.
                 if len(formatted_results) >= limit:
                     break
 
                 enunciado_texto = documents[i]
+                current_emb = embeddings[i]
 
-                # --- O SEU FILTRO DE QUALIDADE ---
-                # Ignora questões muito curtas (provavelmente lixo de extração de PDF)
-                if len(enunciado_texto) < 60:
+                # Filtro 1: Anti-Duplicação Exata (texto normalizado)
+                normalized_text = re.sub(r'\W+', '', enunciado_texto).lower()
+                if normalized_text in seen_texts:
                     continue 
-                # ---------------------------------
 
+                # Filtro 2: Anti-Duplicação Semântica (vetorial)
+                # Verifica se essa questão é semanticamente quase idêntica a outra já aceita
+                is_semantic_duplicate = False
+                for acc_emb in accepted_embeddings:
+                    # Distância L2 Quadrada entre os embeddings
+                    dist_sq = sum((a - b) ** 2 for a, b in zip(current_emb, acc_emb))
+                    # Threshold de 0.15 representa uma similaridade semântica extrema (>95%)
+                    if dist_sq < 0.15:
+                        is_semantic_duplicate = True
+                        break
+                
+                if is_semantic_duplicate:
+                    continue
+
+                # Passou em todos os filtros, é uma questão válida e nova
+                seen_texts.add(normalized_text)
+                accepted_embeddings.append(current_emb)
+
+                # O tamanho já foi filtrado pelo banco vetorial!
+                # Calculando o score matematicamente correto baseado na distância L2 normalizada
+                # L2 normalizado vai de 0 a 4 (onde 0 é identico e 4 é oposto).
+                # Portanto: 1.0 - (dist / 2.0) gera um score entre -1.0 e 1.0
                 dist = distances[i]
-                score = math.exp(-dist / 30)
+                score = max(0.0, 1.0 - (dist / 2.0))
                 
                 formatted_results.append({
                     "external_id": ids[i],
