@@ -1,80 +1,99 @@
 // src/components/Sidebar.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import logoHistorico from "../assets/logo_historico.png"
+import { useNavigate, useLocation } from "react-router-dom";
+import { Plus, Search, MessageSquare, Home, BarChart2, LogOut } from "lucide-react";
+import logoHistorico from "../assets/logo_historico.png";
+import "./Sidebar.css";
 
-export default function Sidebar({ history, onSelectChat, onLogout }) {
+export default function Sidebar({ history, onSelectChat, onLogout, onNewChat, activeChatId }) {
   const navigate = useNavigate();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
   
   const userName = localStorage.getItem("userEmail") || "Usuário";
   const userInitials = userName.substring(0, 2).toUpperCase();
+
+  const filteredHistory = history.filter(chat => 
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <aside className="sidebar">
       <div className="sidebar-content">
         <div className="sidebar-header">
-          <img src={logoHistorico} alt="Histórico" className="logo_historico" />
           <h2>Menu</h2>
         </div>
-        <nav className="sidebar-nav" style={{ marginBottom: "20px", padding: "0 10px" }}>
+
+        <nav className="sidebar-nav">
           <button 
             onClick={() => navigate("/upload")}
-            style={{ width: "100%", textAlign: "left", padding: "10px 12px", background: "transparent", border: "none", borderRadius: "8px", color: "inherit", cursor: "pointer", marginBottom: "8px" }}
+            className={`nav-button ${location.pathname === "/upload" ? "active" : ""}`}
           >
-            Início
+            <Home size={18} />
+            <span>Início</span>
           </button>
           <button 
             onClick={() => navigate("/student-dashboard")}
-            style={{ width: "100%", textAlign: "left", padding: "10px 12px", background: "transparent", border: "none", borderRadius: "8px", color: "inherit", cursor: "pointer" }}
+            className={`nav-button ${location.pathname === "/student-dashboard" ? "active" : ""}`}
           >
-            Meu Desempenho
+            <BarChart2 size={18} />
+            <span>Meu Desempenho</span>
           </button>
         </nav>
-        <div className="sidebar-header" style={{ marginTop: "20px" }}>
+
+        <button onClick={onNewChat} className="new-chat-btn">
+          <Plus size={18} />
+          <span>Nova Conversa</span>
+        </button>
+
+        <div className="sidebar-search">
+          <div className="search-wrapper">
+            <Search size={14} className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Pesquisar chats..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+          </div>
+        </div>
+
+        <div className="sidebar-header">
           <h2>Histórico</h2>
         </div>
-        {history.length === 0 ? (
-          <p className="empty-history">Nenhum histórico ainda.</p>
-        ) : (
-          <ul className="history-list">
-            {history.map((item, index) => {
-              const keyword = item.chatMessage.split(" ").slice(0, 5).join(" ");
-              return (
+
+        <div className="history-container">
+          {filteredHistory.length === 0 ? (
+            <p className="empty-history">
+              {searchQuery ? "Nenhum chat encontrado." : "Nenhum histórico ainda."}
+            </p>
+          ) : (
+            <ul className="history-list">
+              {filteredHistory.map((chat) => (
                 <li
-                  key={index}
-                  onClick={() => onSelectChat(index)}
-                  style={{ cursor: "pointer" }}
+                  key={chat.id}
+                  onClick={() => onSelectChat(chat.id)}
+                  className={`history-item ${activeChatId === chat.id ? "active" : ""}`}
                 >
-                  {keyword}...
+                  <MessageSquare size={18} className="history-icon" />
+                  <span>{chat.title}</span>
                 </li>
-              );
-            })}
-          </ul>
-        )}
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
-      <div className="profile-section">
-        {showProfileMenu && (
-          <div className="profile-menu">
-            <button 
-              onClick={onLogout}
-              className="profile-menu-item logout"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              <span>Sair</span>
-            </button>
+      <div className="sidebar-footer">
+        <div className="user-profile">
+          <div className="user-avatar">{userInitials}</div>
+          <div className="user-info">
+            <span className="user-name">{userName.split("@")[0]}</span>
           </div>
-        )}
-        
-        <div 
-          className="profile-trigger"
-          onClick={() => setShowProfileMenu(!showProfileMenu)}
-        >
-          <div className="profile-avatar">
-            {userInitials}
-          </div>
-          <span className="profile-name">{userName.split("@")[0]}</span>
+          <button onClick={onLogout} className="logout-button" title="Sair da conta">
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
     </aside>

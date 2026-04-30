@@ -70,13 +70,25 @@ function App() {
     return !!token;
   });
 
-  // Histórico e resposta selecionada
+  // Histórico e conversa ativa
   const [chatHistory, setChatHistory] = useState(() => {
     const saved = localStorage.getItem("chatHistory");
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      // Migração simples: se o primeiro item não tiver 'messages', resetamos ou convertemos
+      if (parsed.length > 0 && !parsed[0].messages) {
+        return []; // Reset para evitar conflitos de tipo
+      }
+      return parsed;
+    } catch (e) {
+      return [];
+    }
   });
 
-  const [chatResponse, setChatResponse] = useState(null);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [chatResponse, setChatResponse] = useState(null); // Agora representa a conversa inteira
+
   const [isInteracting, setIsInteracting] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
@@ -90,7 +102,6 @@ function App() {
     if (chatResponse) return;
 
     const handleMouseMove = (e) => {
-      // Calcula a porcentagem da posição do mouse em relação à janela
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
       setMousePos({ x, y });
@@ -100,15 +111,67 @@ function App() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [chatResponse]);
 
-  // Adiciona nova pergunta e resultado da IA ao histórico
+  // Adiciona nova pergunta ao chat ativo ou cria um novo
   const handleNewQuestions = (newData) => {
-    setChatHistory((prev) => [...prev, newData]);
-    setChatResponse(newData); // mostra imediatamente na QuestionList
+    setChatHistory((prev) => {
+      let updatedHistory = [...prev];
+      
+      if (activeChatId) {
+        // Encontra o chat ativo e anexa a nova interação
+        const chatIndex = updatedHistory.findIndex(c => c.id === activeChatId);
+        if (chatIndex !== -1) {
+          const updatedChat = {
+            ...updatedHistory[chatIndex],
+            messages: [...updatedHistory[chatIndex].messages, newData]
+          };
+          updatedHistory[chatIndex] = updatedChat;
+          setChatResponse(updatedChat);
+        }
+      } else {
+        // Cria um novo chat
+        const newId = Date.now().toString();
+        
+        // Título inteligente preferencialmente vindo do backend (topic)
+        let chatTitle = "";
+        
+        if (newData.topic && newData.topic !== "Geral" && newData.topic !== "INVALIDO") {
+          chatTitle = newData.topic;
+        } else if (newData.chatMessage && newData.chatMessage.includes("Upload:")) {
+          // Limpa o nome do arquivo se for upload
+          const fileName = newData.chatMessage.replace("Upload: ", "").split(".")[0];
+          chatTitle = `Arquivo: ${fileName}`;
+        } else {
+          // Fallback para a mensagem truncada
+          chatTitle = newData.chatMessage.substring(0, 30) + (newData.chatMessage.length > 30 ? "..." : "");
+        }
+
+        const newChat = {
+          id: newId,
+          title: chatTitle,
+          messages: [newData]
+        };
+        updatedHistory = [newChat, ...updatedHistory];
+        setActiveChatId(newId);
+        setChatResponse(newChat);
+      }
+      
+      return updatedHistory;
+    });
+  };
+
+  const handleNewChat = () => {
+    setActiveChatId(null);
+    setChatResponse(null);
+    setIsInteracting(false);
   };
 
   // Seleciona um item do histórico
-  const handleSelectChat = (index) => {
-    setChatResponse(chatHistory[index]);
+  const handleSelectChat = (chatId) => {
+    const chat = chatHistory.find(c => c.id === chatId);
+    if (chat) {
+      setActiveChatId(chat.id);
+      setChatResponse(chat);
+    }
   };
 
   const handleLogout = () => {
@@ -198,7 +261,13 @@ function App() {
             ) : (
               <div className="app-container">
                 {/* Sidebar com histórico */}
-                <Sidebar history={chatHistory} onSelectChat={handleSelectChat} onLogout={handleLogout} />
+                <Sidebar 
+                  history={chatHistory} 
+                  onSelectChat={handleSelectChat} 
+                  onLogout={handleLogout}
+                  onNewChat={handleNewChat}
+                  activeChatId={activeChatId}
+                />
 
                 {/* Área principal */}
                 <main className="main-content">
@@ -272,6 +341,7 @@ function App() {
                     <ChatQuestions
                       onNewQuestions={handleNewQuestions}
                       onInteraction={() => setIsInteracting(true)}
+                      activeChatId={activeChatId}
                     />
                   </div>
                 </main>
