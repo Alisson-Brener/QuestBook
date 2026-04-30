@@ -92,7 +92,7 @@ export default function QuestionList({ chatResponse }) {
 
                       {/* ALTERNATIVAS */}
                       <div style={{ marginTop: "12px" }}>
-                        {Object.entries(alternativas).map(([letra, texto]) => {
+                        {Object.entries(alternativas).filter(([_, texto]) => texto && texto.trim()).map(([letra, texto]) => {
                           const isSelected = selected === letra
                           const isCorrect = gabarito === letra
 
