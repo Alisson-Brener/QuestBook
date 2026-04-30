@@ -11,7 +11,7 @@ from backend.services.ai_search import QuestSearchEngine
 # Importa a classe IntentParser de onde ela estiver (llm_agent ou intent_parser)
 from backend.services.llm_agent import IntentParser 
 
-router = APIRouter()
+router = APIRouter(prefix="/student", tags=["Student"])
 
 # --- Inicialização dos Serviços ---
 # Instanciamos aqui para ficarem disponíveis para as rotas
@@ -282,7 +282,10 @@ async def chat_with_questbook(
             if len(response_data) >= qtd_questoes:
                 break
         
-    return response_data
+    return {
+        "questions": response_data,
+        "topic": topic
+    }
 
 # --- NOVAS ROTAS DE ESTATÍSTICAS ---
 

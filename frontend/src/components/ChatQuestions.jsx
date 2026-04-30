@@ -5,7 +5,7 @@ import axios from "axios";
 const MAX_TEXTAREA_HEIGHT = 200;
 const EXPANDED_HEIGHT_THRESHOLD = 44;
 
-export default function ChatQuestions({ onNewQuestions, onInteraction }) {
+export default function ChatQuestions({ onNewQuestions, onInteraction, activeChatId }) {
   const [chatMessage, setChatMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -59,16 +59,18 @@ export default function ChatQuestions({ onNewQuestions, onInteraction }) {
 
       const requestBody = {
         user_message: chatMessage,
+        session_id: activeChatId || "anonimo"
       };
       if (uploadedDocumentId) {
         requestBody.document_id = uploadedDocumentId;
       }
 
-      const res = await axios.post(`${apiUrl}/chat_questions`, requestBody);
+      const res = await axios.post(`${apiUrl}/student/chat_questions`, requestBody);
 
       onNewQuestions({
         chatMessage,
-        results: res.data,
+        results: res.data.questions, // Agora pegamos do campo 'questions'
+        topic: res.data.topic,       // Guardamos o tópico para o título
         ai_understanding: null,
       });
 
@@ -127,9 +129,11 @@ export default function ChatQuestions({ onNewQuestions, onInteraction }) {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      // Podemos enviar o session_id aqui também se necessário, 
+      // mas a rota de upload atual não o recebe explicitamente no body (é multipart)
 
       const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
-      const res = await axios.post(`${apiUrl}/upload_document`, formData, {
+      const res = await axios.post(`${apiUrl}/student/upload_document`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
