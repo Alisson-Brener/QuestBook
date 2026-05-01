@@ -62,7 +62,7 @@
 }
 
 .nav-button:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(107, 92, 255, 0.1);
   color: #fff;
 }
 
@@ -79,7 +79,7 @@
   gap: 10px;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(107, 92, 255, 0.3);
   background: rgba(107, 92, 255, 0.1);
   color: #fff;
   font-size: 0.9rem;
@@ -140,7 +140,7 @@
 }
 
 .history-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(107, 92, 255, 0.15);
   border-radius: 10px;
 }
 
@@ -151,21 +151,27 @@
 }
 
 .history-item {
+  position: relative;
   cursor: pointer;
-  padding: 10px 12px;
+  padding: 8px 44px 8px 12px;
+  /* Aumentado o padding da direita para dar espaço ao botão */
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 0.85rem;
   border-radius: 8px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.75);
+  min-height: 48px;
+  /* Altura um pouco maior para melhor clique */
+  width: 100%;
 }
 
 .history-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  color: #fff;
 }
 
 .history-item.active {
@@ -173,19 +179,151 @@
   color: #fff;
 }
 
-.history-item span {
+.history-item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  width: calc(100% - 40px) !important;
+  /* FORÇA O TEXTO A PARAR ANTES DO BOTÃO */
+}
+
+.history-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.history-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  margin-right: 40px !important;
+  /* EMPURRA O TEXTO PARA LONGE DO BOTÃO */
 }
 
-.history-icon {
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px;
-  flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.5);
+/* Input de edição */
+.edit-history-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #6b5cff;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  width: 100%;
+  outline: none;
+}
+
+/* Container dos Três pontinhos - Centralização Total */
+.history-options-container {
+  position: static;
+  /* PERMITE QUE O MENU SE ALINHE PELA CAIXA TODA, NÃO PELO BOTÃO */
+  display: flex;
+  align-items: center;
+}
+
+.options-trigger {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #ffffff !important;
+  /* BRANCO TOTAL */
+  opacity: 0; /* ESCONDIDO POR PADRÃO */
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 2px;
+  /* AJUSTE FINAL DE POSIÇÃO */
+}
+
+.history-item:hover .options-trigger {
+  color: #fff;
+  opacity: 1 !important; /* APARECE NO HOVER */
+  transform: translateY(-50%) !important;
+}
+
+/* NOVO MENU OVERLAY (Interno para não cortar) */
+.options-dropdown {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  background: #1e1f24;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.options-dropdown button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s;
+  flex: 1;
+  height: 100%;
+  transform: translateY(-4px);
+  /* SOBE AS OPÇÕES DENTRO DO MENU */
+}
+
+.options-dropdown button:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  color: #fff !important;
+}
+
+.options-dropdown button.delete-opt {
+  color: #ff6b6b;
+}
+
+/* Indicador de fixado */
+.pinned-indicator {
+  color: #6b5cff;
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+width: 18px !important;
+height: 18px !important;
+min-width: 18px;
+flex-shrink: 0;
+color: rgba(255, 255, 255, 0.5);
 }
 
 .history-item.active .history-icon {

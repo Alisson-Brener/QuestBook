@@ -1,21 +1,48 @@
-// src/components/Sidebar.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, Search, MessageSquare, Home, BarChart2, LogOut } from "lucide-react";
+import { Plus, Search, MessageSquare, Home, BarChart2, LogOut, Pin, Trash2, MoreVertical, Pencil, Check, X } from "lucide-react";
 import logoHistorico from "../assets/logo_historico.png";
 import "./Sidebar.css";
 
-export default function Sidebar({ history, onSelectChat, onLogout, onNewChat, activeChatId }) {
+export default function Sidebar({ history, onSelectChat, onDeleteChat, onTogglePin, onRenameChat, onLogout, onNewChat, activeChatId }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+
   const userName = localStorage.getItem("userEmail") || "Usuário";
   const userInitials = userName.substring(0, 2).toUpperCase();
 
-  const filteredHistory = history.filter(chat => 
+  // Fecha o menu se clicar fora
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const sortedHistory = [...history].sort((a, b) => {
+    if (a.pinned === b.pinned) return 0;
+    return a.pinned ? -1 : 1;
+  });
+
+  const filteredHistory = sortedHistory.filter(chat =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const startEditing = (chat) => {
+    setEditingId(chat.id);
+    setEditTitle(chat.title);
+    setOpenMenuId(null);
+  };
+
+  const saveEdit = (id) => {
+    if (editTitle.trim()) {
+      onRenameChat(id, editTitle.trim());
+    }
+    setEditingId(null);
+  };
 
   return (
     <aside className="sidebar">
@@ -25,14 +52,14 @@ export default function Sidebar({ history, onSelectChat, onLogout, onNewChat, ac
         </div>
 
         <nav className="sidebar-nav">
-          <button 
+          <button
             onClick={() => navigate("/upload")}
             className={`nav-button ${location.pathname === "/upload" ? "active" : ""}`}
           >
             <Home size={18} />
             <span>Início</span>
           </button>
-          <button 
+          <button
             onClick={() => navigate("/student-dashboard")}
             className={`nav-button ${location.pathname === "/student-dashboard" ? "active" : ""}`}
           >
@@ -49,9 +76,9 @@ export default function Sidebar({ history, onSelectChat, onLogout, onNewChat, ac
         <div className="sidebar-search">
           <div className="search-wrapper">
             <Search size={14} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Pesquisar chats..." 
+            <input
+              type="text"
+              placeholder="Pesquisar chats..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
@@ -73,11 +100,64 @@ export default function Sidebar({ history, onSelectChat, onLogout, onNewChat, ac
               {filteredHistory.map((chat) => (
                 <li
                   key={chat.id}
-                  onClick={() => onSelectChat(chat.id)}
-                  className={`history-item ${activeChatId === chat.id ? "active" : ""}`}
+                  onClick={() => editingId !== chat.id && onSelectChat(chat.id)}
+                  className={`history-item ${activeChatId === chat.id ? "active" : ""} ${chat.pinned ? "pinned" : ""}`}
                 >
-                  <MessageSquare size={18} className="history-icon" />
-                  <span>{chat.title}</span>
+                  <div className="history-item-main">
+                    <MessageSquare size={18} className="history-icon" />
+
+                    {editingId === chat.id ? (
+                      <input
+                        autoFocus
+                        className="edit-history-input"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onBlur={() => saveEdit(chat.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveEdit(chat.id);
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span className="history-title">{chat.title}</span>
+                    )}
+                  </div>
+
+                  {editingId !== chat.id && (
+                    <div className="history-options-container">
+                      <button
+                        className="options-trigger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                        }}
+                      >
+                        ...
+                      </button>
+
+                      {openMenuId === chat.id && (
+                        <div className="options-dropdown" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => { onTogglePin(chat.id); setOpenMenuId(null); }}>
+                            <Pin size={14} /> {chat.pinned ? "Desafixar" : "Fixar"}
+                          </button>
+                          <button onClick={() => startEditing(chat)}>
+                            <Pencil size={14} /> Renomear
+                          </button>
+                          <button className="delete-opt" onClick={() => {
+                            if (window.confirm("Apagar esta conversa?")) onDeleteChat(chat.id);
+                            setOpenMenuId(null);
+                          }}>
+                            <Trash2 size={14} /> Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {chat.pinned && !openMenuId && editingId !== chat.id && (
+                    <Pin size={12} className="pinned-indicator" />
+                  )}
                 </li>
               ))}
             </ul>
