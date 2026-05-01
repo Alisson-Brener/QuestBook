@@ -70,32 +70,59 @@ function App() {
     return !!token;
   });
 
-  // Histórico e conversa ativa
+  // Função para pegar a chave do histórico específica do usuário
+  const getHistoryKey = () => {
+    const email = localStorage.getItem("userEmail");
+    return email ? `chatHistory_${email}` : "chatHistory_guest";
+  };
+
+  // Histórico iniciado com função para evitar reset no refresh
   const [chatHistory, setChatHistory] = useState(() => {
-    const saved = localStorage.getItem("chatHistory");
-    if (!saved) return [];
-    try {
-      const parsed = JSON.parse(saved);
-      // Migração simples: se o primeiro item não tiver 'messages', resetamos ou convertemos
-      if (parsed.length > 0 && !parsed[0].messages) {
-        return []; // Reset para evitar conflitos de tipo
+    const key = getHistoryKey();
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.length > 0 && !parsed[0].messages) return [];
+        return parsed;
+      } catch (e) {
+        return [];
       }
-      return parsed;
-    } catch (e) {
-      return [];
     }
+    return [];
   });
 
   const [activeChatId, setActiveChatId] = useState(null);
-  const [chatResponse, setChatResponse] = useState(null); // Agora representa a conversa inteira
+  const [chatResponse, setChatResponse] = useState(null);
+
+  // Efeito para sincronizar o histórico quando o usuário LOGA ou DESLOGA
+  useEffect(() => {
+    const key = getHistoryKey();
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setChatHistory(parsed);
+      } catch (e) {
+        setChatHistory([]);
+      }
+    } else {
+      setChatHistory([]);
+    }
+    setActiveChatId(null);
+    setChatResponse(null);
+  }, [isAuthenticated]);
 
   const [isInteracting, setIsInteracting] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
-  // Salva histórico sempre que mudar
+  // Salva histórico sempre que mudar (na chave do usuário atual)
   useEffect(() => {
-    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-  }, [chatHistory]);
+    if (isAuthenticated) {
+      const key = getHistoryKey();
+      localStorage.setItem(key, JSON.stringify(chatHistory));
+    }
+  }, [chatHistory, isAuthenticated]);
 
   // Efeito para rastrear o mouse na Hero Section
   useEffect(() => {
@@ -115,7 +142,7 @@ function App() {
   const handleNewQuestions = (newData) => {
     setChatHistory((prev) => {
       let updatedHistory = [...prev];
-      
+
       if (activeChatId) {
         // Encontra o chat ativo e anexa a nova interação
         const chatIndex = updatedHistory.findIndex(c => c.id === activeChatId);
@@ -130,10 +157,10 @@ function App() {
       } else {
         // Cria um novo chat
         const newId = Date.now().toString();
-        
+
         // Título inteligente preferencialmente vindo do backend (topic)
         let chatTitle = "";
-        
+
         if (newData.topic && newData.topic !== "Geral" && newData.topic !== "INVALIDO") {
           chatTitle = newData.topic;
         } else if (newData.chatMessage && newData.chatMessage.includes("Upload:")) {
@@ -154,7 +181,7 @@ function App() {
         setActiveChatId(newId);
         setChatResponse(newChat);
       }
-      
+
       return updatedHistory;
     });
   };
@@ -174,11 +201,37 @@ function App() {
     }
   };
 
+  const handleDeleteChat = (chatId) => {
+    setChatHistory(prev => prev.filter(c => c.id !== chatId));
+    if (activeChatId === chatId) {
+      setActiveChatId(null);
+      setChatResponse(null);
+    }
+  };
+
+  const handleTogglePin = (chatId) => {
+    setChatHistory(prev => prev.map(c =>
+      c.id === chatId ? { ...c, pinned: !c.pinned } : c
+    ));
+  };
+
+  const handleRenameChat = (chatId, newTitle) => {
+    setChatHistory(prev => prev.map(c =>
+      c.id === chatId ? { ...c, title: newTitle } : c
+    ));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userRole");
+
+    // Limpeza crucial dos estados na memória para evitar contaminação
+    setChatHistory([]);
+    setChatResponse(null);
+    setActiveChatId(null);
+
     setIsAuthenticated(false);
   };
 
@@ -188,7 +241,7 @@ function App() {
       chatResponse?.questions ||
       chatResponse?.data ||
       [];
-      
+
     if (questions.length > 0) {
       generateQuestionsPDF(questions);
     }
@@ -241,7 +294,21 @@ function App() {
             !isAuthenticated ? (
               <Navigate to="/login" />
             ) : (
-              <StudentDashboard onLogout={handleLogout} />
+              <div className="app-container">
+                <Sidebar
+                  history={chatHistory}
+                  onSelectChat={handleSelectChat}
+                  onDeleteChat={handleDeleteChat}
+                  onTogglePin={handleTogglePin}
+                  onRenameChat={handleRenameChat}
+                  onLogout={handleLogout}
+                  onNewChat={handleNewChat}
+                  activeChatId={activeChatId}
+                />
+                <main className="main-content">
+                  <StudentDashboard onLogout={handleLogout} />
+                </main>
+              </div>
             )
           }
         />
@@ -261,9 +328,12 @@ function App() {
             ) : (
               <div className="app-container">
                 {/* Sidebar com histórico */}
-                <Sidebar 
-                  history={chatHistory} 
-                  onSelectChat={handleSelectChat} 
+                <Sidebar
+                  history={chatHistory}
+                  onSelectChat={handleSelectChat}
+                  onDeleteChat={handleDeleteChat}
+                  onTogglePin={handleTogglePin}
+                  onRenameChat={handleRenameChat}
                   onLogout={handleLogout}
                   onNewChat={handleNewChat}
                   activeChatId={activeChatId}
@@ -271,6 +341,14 @@ function App() {
 
                 {/* Área principal */}
                 <main className="main-content">
+                  {!chatResponse && (
+                    <div className="hero-waves">
+                      <div className="wave wave-1" style={{ transform: `translate(${(mousePos.x - 50) * 0.2}px, ${(mousePos.y - 50) * 0.2}px)` }}></div>
+                      <div className="wave wave-2" style={{ transform: `translate(${(mousePos.x - 50) * -0.3}px, ${(mousePos.y - 50) * -0.3}px)` }}></div>
+                      <div className="wave wave-3" style={{ transform: `translate(${(mousePos.x - 50) * 0.15}px, ${(mousePos.y - 50) * 0.15}px)` }}></div>
+                    </div>
+                  )}
+
                   <header className="header">
                     <div className="logo-title">
                       <img src={logoPrincipal} alt="Logo Principal" className="logo_principal" />
@@ -279,8 +357,8 @@ function App() {
                     <div className="header-right">
                       <p style={{ color: "rgba(255, 255, 255, 0.6)", marginRight: "10px" }}>Assistente Inteligente de Estudos</p>
                       {chatResponse && (
-                        <button 
-                          onClick={handleExportPDF} 
+                        <button
+                          onClick={handleExportPDF}
                           className="export-pdf-btn-header"
                           style={{
                             width: "auto",
@@ -318,13 +396,6 @@ function App() {
                           "--mouse-y": `${mousePos.y}%` 
                         }}
                       >
-                        {/* Efeito de Ondas/Blobs (Estilo Google AI) */}
-                        <div className="hero-waves">
-                          <div className="wave wave-1" style={{ transform: `translate(${(mousePos.x - 50) * 0.2}px, ${(mousePos.y - 50) * 0.2}px)` }}></div>
-                          <div className="wave wave-2" style={{ transform: `translate(${(mousePos.x - 50) * -0.3}px, ${(mousePos.y - 50) * -0.3}px)` }}></div>
-                          <div className="wave wave-3" style={{ transform: `translate(${(mousePos.x - 50) * 0.15}px, ${(mousePos.y - 50) * 0.15}px)` }}></div>
-                        </div>
-
                         <h1 className="hero-title">
                           Olá, {(localStorage.getItem("userEmail") || "Estudante").split("@")[0].split(".")[0].charAt(0).toUpperCase() + (localStorage.getItem("userEmail") || "estudante").split("@")[0].split(".")[0].slice(1)}.
                         </h1>

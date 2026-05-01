@@ -289,11 +289,19 @@ async def chat_with_questbook(
 
 # --- NOVAS ROTAS DE ESTATÍSTICAS ---
 
+from backend.core.deps import get_current_user
+from backend.models.all_models import UserAnswer, User
+
+# ... restante do arquivo ...
+
 @router.post("/answer")
-async def record_answer(request: AnswerRequest, db: Session = Depends(get_db)):
-    # Mock user_id = 1
+async def record_answer(
+    request: AnswerRequest, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     db_answer = UserAnswer(
-        user_id=1,
+        user_id=current_user.id,
         question_id=request.question_id,
         selected_option=request.selected_option,
         is_correct=1 if request.is_correct else 0,
@@ -304,9 +312,11 @@ async def record_answer(request: AnswerRequest, db: Session = Depends(get_db)):
     return {"status": "success"}
 
 @router.get("/stats")
-async def get_stats(db: Session = Depends(get_db)):
-    user_id = 1
-    answers = db.query(UserAnswer).filter(UserAnswer.user_id == user_id).all()
+async def get_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    answers = db.query(UserAnswer).filter(UserAnswer.user_id == current_user.id).all()
     
     total = len(answers)
     if total == 0:

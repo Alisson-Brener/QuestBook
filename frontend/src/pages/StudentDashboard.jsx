@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Sidebar from "../components/Sidebar";
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -16,7 +15,12 @@ const StudentDashboard = ({ onLogout }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/student/stats");
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:8000/student/stats", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setStats(response.data);
       } catch (error) {
         console.error("Erro ao buscar estatísticas:", error);
@@ -38,7 +42,6 @@ const StudentDashboard = ({ onLogout }) => {
 
   return (
     <div className="student-dashboard-container">
-      <Sidebar history={[]} onSelectChat={() => {}} onLogout={onLogout} />
       
       <main className="student-dashboard-content">
         <header className="student-dashboard-header">
