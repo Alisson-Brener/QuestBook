@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -33,8 +33,7 @@ class UserResponse(BaseModel):
     status: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # O que o usuário envia no login
 class UserLogin(BaseModel):
