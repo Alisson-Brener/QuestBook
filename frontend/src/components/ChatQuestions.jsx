@@ -50,37 +50,71 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
   }, []);
 
   const handleSend = async () => {
-    if (!chatMessage.trim() || loading) return;
+    if ((!chatMessage.trim() && !selectedFile) || loading) return;
     if (onInteraction) onInteraction();
 
     setLoading(true);
     try {
       const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
+      let currentDocumentId = uploadedDocumentId;
+      
+      // 1. Fazer o upload do arquivo se houver
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        
+        const resUpload = await axios.post(`${apiUrl}/student/upload_document`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (resUpload.data.document_id) {
+          currentDocumentId = resUpload.data.document_id;
+          setUploadedDocumentId(currentDocumentId);
+        }
+      }
+
+      // 2. Enviar a mensagem para gerar as questões
+      let userPrompt = chatMessage.trim();
+      if (!userPrompt && selectedFile) {
+        userPrompt = "Gere questões com base no documento fornecido.";
+      }
 
       const requestBody = {
-        user_message: chatMessage,
+        user_message: userPrompt,
         session_id: activeChatId || "anonimo"
       };
-      if (uploadedDocumentId) {
-        requestBody.document_id = uploadedDocumentId;
+      if (currentDocumentId) {
+        requestBody.document_id = currentDocumentId;
       }
 
       const res = await axios.post(`${apiUrl}/student/chat_questions`, requestBody);
 
+      let finalTopic = res.data.topic;
+      if (selectedFile && (!finalTopic || finalTopic === "Geral" || finalTopic === "INVALIDO")) {
+        finalTopic = selectedFile.name.split(".")[0];
+      }
+
+      let displayMessage = chatMessage.trim();
+      if (selectedFile) {
+        displayMessage = displayMessage ? `${displayMessage} (Anexo: ${selectedFile.name})` : `📄 Upload: ${selectedFile.name}`;
+      }
+
       onNewQuestions({
-        chatMessage,
-        results: res.data.questions, // Agora pegamos do campo 'questions'
-        topic: res.data.topic,       // Guardamos o tópico para o título
+        chatMessage: displayMessage,
+        results: res.data.questions || [],
+        topic: finalTopic,
         ai_understanding: null,
       });
 
       setChatMessage("");
+      setSelectedFile(null);
+      setIsExpanded(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
     } catch (err) {
       console.error("Erro na comunicação com a API:", err);
-      alert("Erro ao falar com a IA. Tente novamente mais tarde.");
+      alert("Erro ao processar sua solicitação. Tente novamente mais tarde.");
     } finally {
       setLoading(false);
     }
@@ -119,43 +153,6 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
-  };
-
-  const handleSendPdf = async () => {
-    if (!selectedFile || loading) return;
-    if (onInteraction) onInteraction();
-
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      // Podemos enviar o session_id aqui também se necessário, 
-      // mas a rota de upload atual não o recebe explicitamente no body (é multipart)
-
-      const apiUrl = import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
-      const res = await axios.post(`${apiUrl}/student/upload_document`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.data.document_id) {
-        setUploadedDocumentId(res.data.document_id);
-      }
-
-      onNewQuestions({
-        chatMessage: `📄 Upload: ${selectedFile.name}`,
-        results: res.data.results || [],
-        ai_understanding: null,
-      });
-
-      setSelectedFile(null);
-      setChatMessage("");
-      setIsExpanded(false);
-    } catch (err) {
-      console.error("Erro ao enviar PDF:", err);
-      alert("Erro ao enviar PDF. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const isButtonVisible = chatMessage.trim().length > 0 || loading || selectedFile;
@@ -227,8 +224,8 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
           </button>
         </div>
 
-        {selectedFile ? (
-            <div className="file-preview">
+        {selectedFile && (
+            <div className="file-preview" style={{ padding: '8px 12px', margin: '4px', borderRadius: '8px', background: 'var(--surface-color, #f4f4f5)' }}>
               <div className="file-info">
                 <svg
                   viewBox="0 0 24 24"
@@ -243,12 +240,13 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
-                <span className="file-name">{selectedFile.name}</span>
+                <span className="file-name" style={{ marginLeft: '8px', fontSize: '0.9rem', fontWeight: '500' }}>{selectedFile.name}</span>
               </div>
               <button
                 className="remove-file-btn"
                 onClick={handleRemoveFile}
                 aria-label="Remover arquivo"
+                style={{ marginLeft: 'auto' }}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -263,20 +261,20 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
                 </svg>
               </button>
             </div>
-          ) : (
-            <textarea
-              ref={textareaRef}
-              id="chat-input-textarea"
-              className="chat-input"
-              placeholder="Busque questões sobre o tema desejado..."
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              rows={1}
-              disabled={loading}
-              aria-label="Mensagem para a IA"
-            />
-          )}
+        )}
+
+        <textarea
+          ref={textareaRef}
+          id="chat-input-textarea"
+          className="chat-input"
+          placeholder="Busque questões sobre o tema desejado..."
+          value={chatMessage}
+          onChange={(e) => setChatMessage(e.target.value)}
+          onKeyDown={handleKeyPress}
+          rows={1}
+          disabled={loading}
+          aria-label="Mensagem para a IA"
+        />
 
         <input
           ref={fileInputRef}
@@ -288,7 +286,7 @@ export default function ChatQuestions({ onNewQuestions, onInteraction, activeCha
 
         <button
           className={`send-button ${isButtonVisible ? "visible" : ""}`}
-          onClick={selectedFile ? handleSendPdf : handleSend}
+          onClick={handleSend}
           disabled={loading || (!chatMessage.trim() && !selectedFile)}
           aria-label={selectedFile ? "Enviar PDF" : "Enviar mensagem"}
         >
