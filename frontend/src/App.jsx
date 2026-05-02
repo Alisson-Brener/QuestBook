@@ -236,14 +236,19 @@ function App() {
   };
 
   const handleExportPDF = () => {
-    const questions =
-      chatResponse?.results ||
-      chatResponse?.questions ||
-      chatResponse?.data ||
-      [];
+    if (!chatResponse) return;
 
-    if (questions.length > 0) {
-      generateQuestionsPDF(questions);
+    let allQuestions = [];
+    const messages = chatResponse.messages || [chatResponse];
+
+    messages.forEach(msg => {
+      if (!msg) return;
+      const questions = msg.results || msg.questions || msg.data || [];
+      allQuestions = [...allQuestions, ...questions];
+    });
+
+    if (allQuestions.length > 0) {
+      generateQuestionsPDF(allQuestions, chatResponse.title || "Questões - QuestBook");
     }
   };
 
@@ -381,7 +386,7 @@ function App() {
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                           </svg>
-                          Exportar PDF
+                          Exportar Questões
                         </button>
                       )}
                     </div>
@@ -389,11 +394,11 @@ function App() {
                   <div className="content-scroll-area">
                     {/* Tela de Boas-vindas (Hero State) */}
                     {!chatResponse && (
-                      <div 
+                      <div
                         className={`hero-container ${isInteracting ? "fade-out" : ""}`}
-                        style={{ 
-                          "--mouse-x": `${mousePos.x}%`, 
-                          "--mouse-y": `${mousePos.y}%` 
+                        style={{
+                          "--mouse-x": `${mousePos.x}%`,
+                          "--mouse-y": `${mousePos.y}%`
                         }}
                       >
                         <h1 className="hero-title">

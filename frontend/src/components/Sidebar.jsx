@@ -68,7 +68,12 @@ export default function Sidebar({ history, onSelectChat, onDeleteChat, onToggleP
           </button>
         </nav>
 
-        <button onClick={onNewChat} className="new-chat-btn">
+        <button onClick={() => {
+          onNewChat();
+          if (location.pathname !== "/upload") {
+            navigate("/upload");
+          }
+        }} className="new-chat-btn">
           <Plus size={18} />
           <span>Nova Conversa</span>
         </button>
@@ -100,7 +105,14 @@ export default function Sidebar({ history, onSelectChat, onDeleteChat, onToggleP
               {filteredHistory.map((chat) => (
                 <li
                   key={chat.id}
-                  onClick={() => editingId !== chat.id && onSelectChat(chat.id)}
+                  onClick={() => {
+                    if (editingId !== chat.id) {
+                      onSelectChat(chat.id);
+                      if (location.pathname !== "/upload") {
+                        navigate("/upload");
+                      }
+                    }
+                  }}
                   className={`history-item ${activeChatId === chat.id ? "active" : ""} ${chat.pinned ? "pinned" : ""}`}
                 >
                   <div className="history-item-main">
