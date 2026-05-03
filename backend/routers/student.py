@@ -6,7 +6,8 @@ from pypdf import PdfReader # Usando o pypdf moderno que você já usava
 
 # --- Imports da Nova Estrutura ---
 from backend.core.database import get_db, get_questions_db
-from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion, UserAnswer, SearchEvaluation
+from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion, UserAnswer, SearchEvaluation, User
+from backend.core.deps import get_optional_current_user
 from backend.services.ai_search import QuestSearchEngine
 # Importa a classe IntentParser de onde ela estiver (llm_agent ou intent_parser)
 from backend.services.llm_agent import IntentParser 
@@ -108,7 +109,8 @@ async def upload_document(
 async def chat_with_questbook(
     request: ChatRequest, 
     db_app: Session = Depends(get_db),           
-    db_questoes: Session = Depends(get_questions_db) # MySQL
+    db_questoes: Session = Depends(get_questions_db),
+    current_user: User = Depends(get_optional_current_user)
 ):
     print(f"💬 Usuário: '{request.user_message}'")
 
@@ -204,13 +206,24 @@ async def chat_with_questbook(
 
     # 3. Hidratação via ORM (Recuperando de todos os candidatos sem limitar prematuramente)
     ids_encontrados = []
+    
+    # 3.0 - Anti-Repetição Histórica: Busca questões já respondidas pelo usuário
+    ids_respondidos = set()
+    if current_user:
+        historico = db_app.query(UserAnswer.question_id).filter(
+            UserAnswer.user_id == current_user.id
+        ).all()
+        ids_respondidos = {r[0] for r in historico}
+
     for r in unique_results:
         # AQUI ESTÁ O NOVO COMPORTAMENTO: Filtramos CADA questão pela trava de confiança
-        if r['confidence'] < 0.4:
+        if r['confidence'] < 0.65:
             continue
             
         try:
-            ids_encontrados.append(int(r['external_id']))
+            q_id = int(r['external_id'])
+            if q_id not in ids_respondidos:
+                ids_encontrados.append(q_id)
         except:
             continue
     
@@ -264,7 +277,7 @@ async def chat_with_questbook(
         # Verifica se o ID vetorial ainda existe no Banco Relacional
         if q_id in mapa_mysql:
             score = vetor_result['confidence']
-            if score < 0.4:
+            if score < 0.65:
                 continue # Pula se a confiança for muito baixa
                 
             q_sql = mapa_mysql[q_id]

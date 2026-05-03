@@ -61,7 +61,7 @@ class IntentParser:
         3. NUNCA coloque "capítulo 2" ou "seção 3" na sua `search_query`! O banco de dados vetorial NÃO SABE o que é capítulo 2. Coloque os ASSUNTOS (ex: "questões de concurso sobre processos de software, scrum, kanban").
 
         REGRAS PARA A QUERY DE BUSCA (search_query):
-        1. Crie uma frase semanticamente rica para usar em um banco de dados vetorial. 
+        1. Crie uma string de busca focada apenas nos conceitos técnicos. Não use conectivos ou palavras genéricas como "questões de concurso sobre".
         2. Use palavras completas que descrevam o tema técnico ou da matéria.
 
         REGRAS DE SEGURANÇA (IMPORTANTE):
@@ -69,9 +69,9 @@ class IntentParser:
         2. Se o usuário perguntar sobre culinária, piadas, futebol, ou falar abobrinha, retorne "topic": "INVALIDO".
 
         EXEMPLOS (FEW-SHOT):
-        Input: "gere 4 questões sobre o capitulo 6" -> Output: {{"topic": "Questões do Capítulo 6", "limit": 4, "search_query": "questões de concurso sobre os temas do capítulo 6"}}
-        Input: "questoes de java" -> Output: {{"topic": "Linguagem Java", "limit": 5, "search_query": "questões de concurso sobre a linguagem de programação Java"}}
-        Input: "mais 5 da FGV" -> Output: {{"topic": "Histórico", "banca": "FGV", "limit": 5, "search_query": "questões de concurso da banca FGV"}}
+        Input: "gere 4 questões sobre o capitulo 6" -> Output: {{"topic": "Capítulo 6: Redes", "limit": 4, "search_query": "redes de computadores, modelo OSI, protocolo TCP/IP, roteamento"}}
+        Input: "questoes de java" -> Output: {{"topic": "Linguagem Java", "limit": 5, "search_query": "linguagem java, programação orientada a objetos, herança, polimorfismo"}}
+        Input: "mais 5 da FGV" -> Output: {{"topic": "Histórico", "banca": "FGV", "limit": 5, "search_query": "tópicos relevantes da banca FGV"}}
         """
 
         messages = [
