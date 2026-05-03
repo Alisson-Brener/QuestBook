@@ -292,7 +292,7 @@ function App() {
             !isAuthenticated ? (
               <Navigate to="/login" />
             ) : (
-              <TeacherDashboard />
+              <TeacherDashboard onLogout={handleLogout} />
             )
           }
         />

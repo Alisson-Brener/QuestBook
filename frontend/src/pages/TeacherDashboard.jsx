@@ -6,7 +6,7 @@ import SearchAudit from "../components/SearchAudit";
 
 const API_URL = "http://localhost:8000";
 
-export default function TeacherDashboard() {
+export default function TeacherDashboard({ onLogout }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,12 +30,17 @@ export default function TeacherDashboard() {
     fetchProfile();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userRole");
-    navigate("/login");
+  const handleLogoutLocal = () => {
+    if (onLogout) {
+      onLogout();
+      navigate("/login");
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userRole");
+      navigate("/login");
+    }
   };
 
   if (loading) {
@@ -56,7 +61,7 @@ export default function TeacherDashboard() {
         <nav className="header-nav">
           <span className={`nav-link ${activeTab === "profile" ? "active" : ""}`} onClick={() => setActiveTab("profile")}>Perfil</span>
           <span className={`nav-link ${activeTab === "audit" ? "active" : ""}`} onClick={() => setActiveTab("audit")}>Auditar Buscas</span>
-          <span className="nav-link" onClick={handleLogout}>Sair</span>
+          <span className="nav-link" onClick={handleLogoutLocal}>Sair</span>
         </nav>
       </header>
 
