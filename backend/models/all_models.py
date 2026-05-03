@@ -110,6 +110,7 @@ class SearchEvaluation(Base):
     query = Column(String) # O tema ou query pesquisada
     question_id = Column(Integer) # ID da questão (QuestaoLegada)
     relevance_score = Column(Integer) # Ex: 1 (Irrelevante) a 5 (Muito Relevante)
+    is_flawed = Column(Integer, default=0) # 1 se a questão tem erro (gabarito/formato), 0 se está OK
     feedback = Column(Text, nullable=True) # Opcional: comentário do curador
     evaluated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 

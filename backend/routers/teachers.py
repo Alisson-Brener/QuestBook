@@ -14,6 +14,7 @@ class SearchEvaluationCreate(BaseModel):
     query: str
     question_id: int
     relevance_score: int
+    is_flawed: bool = False
     feedback: Optional[str] = None
 
 class SearchEvaluationBatch(BaseModel):
@@ -68,6 +69,7 @@ def evaluate_search(
             query=eval_data.query,
             question_id=eval_data.question_id,
             relevance_score=eval_data.relevance_score,
+            is_flawed=1 if eval_data.is_flawed else 0,
             feedback=eval_data.feedback
         )
         db.add(new_eval)

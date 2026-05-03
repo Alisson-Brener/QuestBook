@@ -47,6 +47,7 @@ export default function SearchAudit() {
       query: topic || query,
       question_id: parseInt(qId),
       relevance_score: evaluations[qId].relevance_score || 3,
+      is_flawed: evaluations[qId].is_flawed || false,
       feedback: evaluations[qId].feedback || ""
     }));
 
@@ -109,7 +110,27 @@ export default function SearchAudit() {
                   </span>
                 </div>
 
-                <div className="q-body" dangerouslySetInnerHTML={{ __html: q.enunciado || "Sem enunciado" }} />
+                <div className="q-body">
+                  <div dangerouslySetInnerHTML={{ __html: q.enunciado || "Sem enunciado" }} />
+                  
+                  {q.alternativas && Object.keys(q.alternativas).length > 0 && (
+                    <div className="audit-alts-container">
+                      <strong className="audit-alts-title">Alternativas:</strong>
+                      {Object.entries(q.alternativas).filter(([_, texto]) => texto && texto.trim()).map(([letra, texto]) => (
+                        <div key={letra} className={`audit-alt-item ${q.gabarito === letra ? "correct" : ""}`}>
+                          <strong>{letra}) </strong>
+                          <span dangerouslySetInnerHTML={{ __html: texto }} />
+                          {q.gabarito === letra && <span className="audit-alt-badge">✓ Gabarito</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(!q.alternativas || Object.keys(q.alternativas).length === 0) && q.gabarito && (
+                    <div className="audit-gabarito-box">
+                      <strong>Gabarito: </strong> {q.gabarito}
+                    </div>
+                  )}
+                </div>
 
                 <div className="audit-eval-container">
                   <h4 className="audit-eval-title">
@@ -118,19 +139,35 @@ export default function SearchAudit() {
                   </h4>
 
                   <div className="audit-eval-controls">
-                    <label>Relevância:</label>
-                    <select
-                      value={evaluations[q.id]?.relevance_score || ""}
-                      onChange={(e) => handleEvalChange(q.id, "relevance_score", parseInt(e.target.value))}
-                      className="chat-input audit-select"
-                    >
-                      <option value="" disabled>Selecione uma nota...</option>
-                      <option value="1">1 - Totalmente Irrelevante</option>
-                      <option value="2">2 - Pouco Relevante</option>
-                      <option value="3">3 - Neutro</option>
-                      <option value="4">4 - Relevante</option>
-                      <option value="5">5 - Muito Relevante / Perfeita</option>
-                    </select>
+                    <div className="audit-relevance-wrapper">
+                      <label>Relevância da Busca:</label>
+                      <select
+                        value={evaluations[q.id]?.relevance_score || ""}
+                        onChange={(e) => handleEvalChange(q.id, "relevance_score", parseInt(e.target.value))}
+                        className="chat-input audit-select"
+                      >
+                        <option value="" disabled>Selecione uma nota...</option>
+                        <option value="1">1 - Totalmente Irrelevante</option>
+                        <option value="2">2 - Pouco Relevante</option>
+                        <option value="3">3 - Neutro</option>
+                        <option value="4">4 - Relevante</option>
+                        <option value="5">5 - Muito Relevante / Perfeita</option>
+                      </select>
+                    </div>
+
+                    <div className={`audit-ban-wrapper ${evaluations[q.id]?.is_flawed ? "banned" : ""}`} onClick={() => handleEvalChange(q.id, "is_flawed", !evaluations[q.id]?.is_flawed)}>
+                      <input 
+                        type="checkbox" 
+                        id={`flawed-${q.id}`}
+                        checked={evaluations[q.id]?.is_flawed || false}
+                        onChange={(e) => handleEvalChange(q.id, "is_flawed", e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="audit-ban-checkbox"
+                      />
+                      <label htmlFor={`flawed-${q.id}`} className="audit-ban-label">
+                        Inativar Questão (Erro de Gabarito / Formatação)
+                      </label>
+                    </div>
                   </div>
 
                   <textarea

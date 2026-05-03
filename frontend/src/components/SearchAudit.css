@@ -78,6 +78,7 @@
   align-items: center;
   gap: 15px;
   margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .audit-eval-controls label {
@@ -156,4 +157,84 @@
   border-radius: 8px;
   margin-top: 20px;
   color: #ccc;
+}
+
+/* NOVAS CLASSES PARA ALTERNATIVAS E GABARITO */
+.audit-alts-container {
+  margin-top: 15px;
+}
+
+.audit-alts-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #ccc;
+  font-weight: bold;
+}
+
+.audit-alt-item {
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+
+.audit-alt-item.correct {
+  background-color: rgba(46, 204, 113, 0.15);
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
+.audit-alt-badge {
+  color: #2ecc71;
+  margin-left: 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.audit-gabarito-box {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(46, 204, 113, 0.1);
+  border-radius: 6px;
+}
+
+.audit-relevance-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-ban-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.audit-ban-wrapper.banned {
+  background: rgba(231, 76, 60, 0.15);
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+.audit-ban-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.audit-ban-label {
+  color: #ccc;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+
+.audit-ban-wrapper.banned .audit-ban-label {
+  color: #ff6b6b;
 }
