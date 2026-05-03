@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.main import app
 from backend.core.database import get_db, get_questions_db, Base
-from backend.core.deps import get_current_user
+from backend.core.deps import get_current_user, get_optional_current_user
 from backend.models.all_models import User
 
 # --- Setup in-memory SQLite DB for testing ---
@@ -37,7 +37,7 @@ def db_session(setup_database):
 
 @pytest.fixture
 def test_user():
-    return User(id=1, email="test@test.com", password_hash="hash")
+    return User(id=1, name="Test User", email="test@test.com", password_hash="hash")
 
 @pytest.fixture
 def client(db_session, test_user):
@@ -54,6 +54,7 @@ def client(db_session, test_user):
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_questions_db] = override_get_db # Usamos o mesmo db in-memory para simplificar
     app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_optional_current_user] = override_get_current_user
 
     with TestClient(app) as c:
         yield c
