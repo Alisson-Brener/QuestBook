@@ -252,16 +252,20 @@ function App() {
     }
   };
 
+  const getHomeRoute = () => {
+    return localStorage.getItem("userRole") === "curador" ? "/dashboard" : "/upload";
+  };
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? getHomeRoute() : "/login"} />} />
 
         <Route
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/upload" />
+              <Navigate to={getHomeRoute()} />
             ) : (
               <Login onLoginSuccess={() => setIsAuthenticated(true)} />
             )
@@ -271,7 +275,7 @@ function App() {
         <Route
           path="/register"
           element={
-            isAuthenticated ? <Navigate to="/upload" /> : <Register />
+            isAuthenticated ? <Navigate to={getHomeRoute()} /> : <Register />
           }
         />
 
@@ -298,6 +302,8 @@ function App() {
           element={
             !isAuthenticated ? (
               <Navigate to="/login" />
+            ) : localStorage.getItem("userRole") === "curador" ? (
+              <Navigate to="/dashboard" />
             ) : (
               <div className="app-container">
                 <Sidebar
@@ -321,7 +327,7 @@ function App() {
         <Route
           path="/forgot-password"
           element={
-            isAuthenticated ? <Navigate to="/upload" /> : <ForgotPassword />
+            isAuthenticated ? <Navigate to={getHomeRoute()} /> : <ForgotPassword />
           }
         />
 
@@ -330,6 +336,8 @@ function App() {
           element={
             !isAuthenticated ? (
               <Navigate to="/login" />
+            ) : localStorage.getItem("userRole") === "curador" ? (
+              <Navigate to="/dashboard" />
             ) : (
               <div className="app-container">
                 {/* Sidebar com histórico */}

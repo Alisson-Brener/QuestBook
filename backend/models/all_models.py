@@ -21,8 +21,9 @@ class User(Base):
     
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
     
-    # Relacionamento com respostas
+    # Relacionamento com respostas e avaliações
     answers = relationship("UserAnswer", back_populates="user")
+    evaluations = relationship("SearchEvaluation", back_populates="teacher")
 
 # Tabela de Documentos (PDFs)
 class Document(Base):
@@ -99,3 +100,17 @@ class UserAnswer(Base):
     answered_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
 
     user = relationship("User", back_populates="answers")
+
+# Tabela de Avaliações de Buscas (Professor/Curador)
+class SearchEvaluation(Base):
+    __tablename__ = "search_evaluations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    teacher_id = Column(Integer, ForeignKey("users.id"))
+    query = Column(String) # O tema ou query pesquisada
+    question_id = Column(Integer) # ID da questão (QuestaoLegada)
+    relevance_score = Column(Integer) # Ex: 1 (Irrelevante) a 5 (Muito Relevante)
+    feedback = Column(Text, nullable=True) # Opcional: comentário do curador
+    evaluated_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+
+    teacher = relationship("User", back_populates="evaluations")
