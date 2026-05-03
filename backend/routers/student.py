@@ -6,7 +6,7 @@ from pypdf import PdfReader # Usando o pypdf moderno que você já usava
 
 # --- Imports da Nova Estrutura ---
 from backend.core.database import get_db, get_questions_db
-from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion, UserAnswer
+from backend.models.all_models import QuestaoLegada, Document, Chapter, SuggestedQuestion, UserAnswer, SearchEvaluation
 from backend.services.ai_search import QuestSearchEngine
 # Importa a classe IntentParser de onde ela estiver (llm_agent ou intent_parser)
 from backend.services.llm_agent import IntentParser 
@@ -218,6 +218,26 @@ async def chat_with_questbook(
         return [{
             "id": -1,
             "enunciado": "As questões que encontrei sobre esse tema não tinham qualidade/correlação suficiente. Tente pesquisar usando outros termos.",
+            "alternativas": {},
+            "gabarito": "N/A",
+            "confidence": 0.0,
+            "metadados": {"tipo": "AVISO_SISTEMA"}
+        }]
+
+    # 3.1 - Hard Ban Check (Evita questões marcadas como defeituosas pelos Curadores)
+    flawed_evals = db_app.query(SearchEvaluation.question_id).filter(
+        SearchEvaluation.question_id.in_(ids_encontrados),
+        SearchEvaluation.is_flawed == 1
+    ).all()
+    flawed_ids = {f[0] for f in flawed_evals}
+    
+    # Remove os IDs defeituosos
+    ids_encontrados = [qid for qid in ids_encontrados if qid not in flawed_ids]
+
+    if not ids_encontrados:
+        return [{
+            "id": -1,
+            "enunciado": "As questões encontradas foram inativadas pela nossa curadoria devido a erros identificados.",
             "alternativas": {},
             "gabarito": "N/A",
             "confidence": 0.0,

@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logoPrincipal from "../assets/logo_principal.png"
 import axios from "axios";
+import SearchAudit from "../components/SearchAudit";
 
 const API_URL = "http://localhost:8000";
 
-export default function TeacherDashboard() {
+export default function TeacherDashboard({ onLogout }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("profile"); // 'profile' | 'audit'
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,12 +30,17 @@ export default function TeacherDashboard() {
     fetchProfile();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userRole");
-    navigate("/login");
+  const handleLogoutLocal = () => {
+    if (onLogout) {
+      onLogout();
+      navigate("/login");
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userRole");
+      navigate("/login");
+    }
   };
 
   if (loading) {
@@ -52,8 +59,9 @@ export default function TeacherDashboard() {
           <span className="logo-text">QuestBook</span>
         </div>
         <nav className="header-nav">
-          <span className="nav-link">Perfil</span>
-          <span className="nav-link" onClick={handleLogout}>Sair</span>
+          <span className={`nav-link ${activeTab === "profile" ? "active" : ""}`} onClick={() => setActiveTab("profile")}>Perfil</span>
+          <span className={`nav-link ${activeTab === "audit" ? "active" : ""}`} onClick={() => setActiveTab("audit")}>Auditar Buscas</span>
+          <span className="nav-link" onClick={handleLogoutLocal}>Sair</span>
         </nav>
       </header>
 
@@ -65,42 +73,50 @@ export default function TeacherDashboard() {
           </p>
         </div>
 
-        <section className="profile-section">
-          <div className="section-header">
-            <h2>Informações do Perfil</h2>
-          </div>
-          
-          {profile && (
-            <div className="profile-grid">
-              <div className="profile-item">
-                <span className="profile-label">Nome</span>
-                <span className="profile-value">{profile.name}</span>
-              </div>
-              <div className="profile-item">
-                <span className="profile-label">Email</span>
-                <span className="profile-value">{profile.email}</span>
-              </div>
-              <div className="profile-item">
-                <span className="profile-label">Instituição</span>
-                <span className="profile-value">{profile.instituicao || "Não informado"}</span>
-              </div>
-              <div className="profile-item">
-                <span className="profile-label">Formação</span>
-                <span className="profile-value">{profile.formacao || "Não informado"}</span>
-              </div>
-              <div className="profile-item">
-                <span className="profile-label">Área de atuação</span>
-                <span className="profile-value">{profile.area_atuacao || "Não informado"}</span>
-              </div>
-              {profile.biografia && (
-                <div className="profile-item full-width">
-                  <span className="profile-label">Biografia</span>
-                  <span className="profile-value">{profile.biografia}</span>
-                </div>
-              )}
+        {activeTab === "profile" && (
+          <section className="profile-section">
+            <div className="section-header">
+              <h2>Informações do Perfil</h2>
             </div>
-          )}
-        </section>
+            
+            {profile && (
+              <div className="profile-grid">
+                <div className="profile-item">
+                  <span className="profile-label">Nome</span>
+                  <span className="profile-value">{profile.name}</span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">Email</span>
+                  <span className="profile-value">{profile.email}</span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">Instituição</span>
+                  <span className="profile-value">{profile.instituicao || "Não informado"}</span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">Formação</span>
+                  <span className="profile-value">{profile.formacao || "Não informado"}</span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">Área de atuação</span>
+                  <span className="profile-value">{profile.area_atuacao || "Não informado"}</span>
+                </div>
+                {profile.biografia && (
+                  <div className="profile-item full-width">
+                    <span className="profile-label">Biografia</span>
+                    <span className="profile-value">{profile.biografia}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === "audit" && (
+          <section className="audit-section">
+            <SearchAudit />
+          </section>
+        )}
 
         <div className="status-indicator">
           <span className="status-dot"></span>

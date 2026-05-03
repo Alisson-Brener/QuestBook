@@ -5,6 +5,20 @@ from backend.models.all_models import User
 from backend.schemas.auth import TeacherCreate, UserResponse
 from backend.core.security import get_password_hash, create_access_token, create_refresh_token
 from backend.core.security import verify_password
+from backend.core.deps import get_current_user
+from backend.models.all_models import SearchEvaluation
+from pydantic import BaseModel
+from typing import List, Optional
+
+class SearchEvaluationCreate(BaseModel):
+    query: str
+    question_id: int
+    relevance_score: int
+    is_flawed: bool = False
+    feedback: Optional[str] = None
+
+class SearchEvaluationBatch(BaseModel):
+    evaluations: List[SearchEvaluationCreate]
 
 router = APIRouter(prefix="/teachers", tags=["teachers"])
 
@@ -39,3 +53,26 @@ def get_my_profile(email: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     return user
+
+@router.post("/audit_evaluate")
+def evaluate_search(
+    batch: SearchEvaluationBatch,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "curador" and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso negado. Apenas curadores podem avaliar buscas.")
+
+    for eval_data in batch.evaluations:
+        new_eval = SearchEvaluation(
+            teacher_id=current_user.id,
+            query=eval_data.query,
+            question_id=eval_data.question_id,
+            relevance_score=eval_data.relevance_score,
+            is_flawed=1 if eval_data.is_flawed else 0,
+            feedback=eval_data.feedback
+        )
+        db.add(new_eval)
+    
+    db.commit()
+    return {"message": f"{len(batch.evaluations)} avaliações salvas com sucesso!"}
