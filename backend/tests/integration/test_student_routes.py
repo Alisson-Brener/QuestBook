@@ -81,3 +81,79 @@ def test_chat_questions_with_document_heuristics(client, mock_ai_services, db_se
     assert call_kwargs["document_context"] is not None
     # Verifica se a fatia capturou a área correta ("Scrum e Kanban")
     assert "Scrum e Kanban" in call_kwargs["document_context"]
+
+def test_chat_questions_rejects_low_confidence(client, mock_ai_services, db_session):
+    """Testa se questões com confiança < 0.65 são rejeitadas"""
+    mock_parser, mock_engine = mock_ai_services
+    
+    # Configura o mock do ChromaDB para retornar uma questão com baixa confiança
+    mock_engine.search_relevant_questions.return_value = [
+        {
+            "external_id": 102,
+            "confidence": 0.50, # < 0.65 (Rejeitado)
+            "enunciado": "Questão de baixa qualidade",
+            "metadata": {"banca": "CESPE", "ano": 2021}
+        }
+    ]
+    
+    response = client.post(
+        "/student/chat_questions", 
+        json={"user_message": "Me dê questões difíceis"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    # Deve retornar a mensagem de sistema indicando que não encontrou questões com qualidade
+    assert isinstance(data, list)
+    assert data[0]["id"] == -1
+    assert "qualidade/correlação suficiente" in data[0]["enunciado"]
+
+def test_chat_questions_excludes_answered_questions(client, mock_ai_services, db_session):
+    """Testa se questões já respondidas pelo usuário (UserAnswer) não são retornadas"""
+    from backend.models.all_models import QuestaoLegada, UserAnswer, User
+    mock_parser, mock_engine = mock_ai_services
+    
+    # Cria o usuário atual (mesmo ID retornado pelo mock do get_optional_current_user: 1)
+    # Nota: a fixture test_user já cria o usuário com ID 1, mas não está salva no DB de testes local dessa sessão
+    db_user = User(id=1, name="Test User", email="test@test.com", password_hash="hash")
+    db_session.add(db_user)
+    
+    # Adiciona 2 questões
+    q1 = QuestaoLegada(id=201, enunciado="Questão Inédita", alternativa_a="A", gabarito="A")
+    q2 = QuestaoLegada(id=202, enunciado="Questão Já Respondida", alternativa_a="A", gabarito="B")
+    db_session.add_all([q1, q2])
+    
+    # Registra que o usuário já respondeu a questão 202
+    answer = UserAnswer(user_id=1, question_id=202, selected_option="B", is_correct=1, topic="Geral")
+    db_session.add(answer)
+    db_session.commit()
+    
+    # Mock do banco vetorial retornando ambas
+    mock_engine.search_relevant_questions.return_value = [
+        {
+            "external_id": 201,
+            "confidence": 0.90,
+            "enunciado": "Questão Inédita",
+            "metadata": {"banca": "FGV", "ano": 2022}
+        },
+        {
+            "external_id": 202,
+            "confidence": 0.85,
+            "enunciado": "Questão Já Respondida",
+            "metadata": {"banca": "FGV", "ano": 2022}
+        }
+    ]
+    
+    response = client.post(
+        "/student/chat_questions", 
+        json={"user_message": "questoes"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    questions = data.get("questions", [])
+    
+    # Só a 201 deve ser retornada!
+    assert len(questions) == 1
+    assert questions[0]["id"] == 201
+
