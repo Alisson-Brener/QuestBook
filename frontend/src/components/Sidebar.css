@@ -111,9 +111,9 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
-.search-input {
+.sidebar .search-input {
   width: 100%;
-  padding: 10px 12px 10px 36px;
+  padding: 10px 12px 10px 45px !important;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
@@ -319,14 +319,11 @@
   margin-left: 2px;
 }
 
-width: 18px !important;
-height: 18px !important;
-min-width: 18px;
-flex-shrink: 0;
-color: rgba(255, 255, 255, 0.5);
-}
-
 .history-item.active .history-icon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  flex-shrink: 0;
   color: #fff;
 }
 
