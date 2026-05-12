@@ -66,7 +66,8 @@
   overflow: hidden;
   background-color: #0e0f11;
   width: calc(100vw - 250px);
-  position: relative; /* FUNDO PARA AS ONDAS */
+  position: relative;
+  /* FUNDO PARA AS ONDAS */
   /* Garante que ocupe o restante do sidebar */
 }
 
@@ -76,8 +77,10 @@
   flex-direction: column;
   overflow-y: auto;
   padding: 20px 20px 140px;
-  position: relative; /* REFERÊNCIA PARA AS ONDAS */
-  align-items: center; /* CENTRALIZA O CONTEÚDO NO MEIO DA TELA */
+  position: relative;
+  /* REFERÊNCIA PARA AS ONDAS */
+  align-items: center;
+  /* CENTRALIZA O CONTEÚDO NO MEIO DA TELA */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
@@ -132,9 +135,9 @@
 }
 
 .logo_principal {
-  width: 40px;
+  width: 36px;
   height: auto;
-  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(107, 92, 255, 0.3));
 }
 
 .header p {
@@ -297,7 +300,8 @@ button:hover {
   filter: blur(100px);
   opacity: 0.8;
   overflow: hidden;
-  display: block; /* GARANTE QUE RENDERIZE COMO BLOCO TOTAL */
+  display: block;
+  /* GARANTE QUE RENDERIZE COMO BLOCO TOTAL */
 }
 
 .wave {
@@ -310,8 +314,10 @@ button:hover {
 }
 
 .wave-1 {
-  width: 800px; /* Aumentado */
-  height: 700px; /* Aumentado */
+  width: 800px;
+  /* Aumentado */
+  height: 700px;
+  /* Aumentado */
   background: radial-gradient(circle, rgba(107, 92, 255, 0.8) 0%, transparent 70%);
   top: -10%;
   left: -10%;
@@ -319,8 +325,10 @@ button:hover {
 }
 
 .wave-2 {
-  width: 900px; /* Aumentado */
-  height: 800px; /* Aumentado */
+  width: 900px;
+  /* Aumentado */
+  height: 800px;
+  /* Aumentado */
   background: radial-gradient(circle, rgba(167, 139, 250, 0.8) 0%, transparent 70%);
   bottom: -15%;
   right: -5%;

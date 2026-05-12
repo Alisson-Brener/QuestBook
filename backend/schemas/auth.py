@@ -20,6 +20,13 @@ class TeacherCreate(BaseModel):
     area_atuacao: str
     biografia: Optional[str] = None
 
+class TeacherUpdate(BaseModel):
+    name: Optional[str] = None
+    instituicao: Optional[str] = None
+    formacao: Optional[str] = None
+    area_atuacao: Optional[str] = None
+    biografia: Optional[str] = None
+
 # O que o sistema devolve (escondendo a senha)
 class UserResponse(BaseModel):
     id: int

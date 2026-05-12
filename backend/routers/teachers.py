@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.core.database import get_db
 from backend.models.all_models import User
-from backend.schemas.auth import TeacherCreate, UserResponse
+from backend.schemas.auth import TeacherCreate, TeacherUpdate, UserResponse
 from backend.core.security import get_password_hash, create_access_token, create_refresh_token
 from backend.core.security import verify_password
 from backend.core.deps import get_current_user
@@ -52,6 +52,25 @@ def get_my_profile(email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user
+
+@router.put("/me", response_model=UserResponse)
+def update_my_profile(
+    update_data: TeacherUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    # Atualiza apenas os campos fornecidos
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for field, value in update_dict.items():
+        setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
     return user
 
 @router.post("/audit_evaluate")
