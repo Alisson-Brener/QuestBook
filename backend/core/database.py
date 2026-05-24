@@ -15,7 +15,9 @@ SessionLocalPG = sessionmaker(autocommit=False, autoflush=False, bind=engine_pg)
 # --- 2. BANCO DE QUESTÕES (MySQL) ---
 MYSQL_URL = os.getenv("MYSQL_URL")
 if not MYSQL_URL:
-    raise ValueError("❌ Erro: Variável MYSQL_URL não encontrada no .env")
+    print("⚠️ Aviso: Variável MYSQL_URL não encontrada no ambiente. Utilizando DATABASE_URL como fallback.")
+    MYSQL_URL = PG_URL
+
 engine_mysql = create_engine(MYSQL_URL)
 SessionLocalMySQL = sessionmaker(autocommit=False, autoflush=False, bind=engine_mysql)
 
